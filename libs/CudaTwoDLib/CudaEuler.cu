@@ -7,10 +7,10 @@ __global__ void CudaSingleTransformStepIndexed(inttype N, fptype* derivative, fp
     int stride = blockDim.x * gridDim.x;
 
     for (int i = index; i < workingN; i+= stride ){
-      int i_r = map[workindex[i+offset]];
+      int i_r = map[workindex[i]+offset];
       fptype dr = 0.;
-      for(unsigned int j = ia[workindex[i+offset]-offset]; j < ia[workindex[i+offset]-offset+1]; j++){
-          int j_m = map[ja[j]];
+      for(unsigned int j = ia[workindex[i]]; j < ia[workindex[i]+1]; j++){
+          int j_m = map[ja[j]+offset];
           dr += val[j]*mass[j_m];
       }
       dr -= mass[i_r];
@@ -43,11 +43,11 @@ __global__ void CudaCalculateGridDerivativeIndexed(inttype N, fptype rate, fptyp
     int index  = blockIdx.x * blockDim.x + threadIdx.x;
     int stride = blockDim.x * gridDim.x;
 
-    for (int i = index; i < workingN; i+= stride ){
-      int io = working[i+offset];
+    for (int i = index; i < N; i+= stride ){
+      int io = working[i]+offset;
       fptype dr = 0.;
-      dr += stays*mass[((((io+offset_1)%N)+N) % N)];
-  		dr += goes*mass[((((io+offset_2)%N)+N) % N)];
+      dr += stays*mass[((((io+offset_1)%N)+N) % N)+offset];
+  		dr += goes*mass[((((io+offset_2)%N)+N) % N)+offset];
       dr -= mass[io];
       derivative[io] += rate*dr;
     }
@@ -76,7 +76,7 @@ __global__ void EulerStepIndexed(fptype* derivative, fptype* mass, inttype offse
   int stride = blockDim.x * gridDim.x;
 
   for (int i = index; i < workingN; i+= stride ){
-    mass[workindex[i+offset]] += derivative[workindex[i+offset]];
+    mass[workindex[i]+offset] += derivative[workindex[i]+offset];
   }
 }
 
@@ -209,6 +209,23 @@ __global__ void MapReset(inttype n_reset, inttype* res_from, inttype* res_to, fp
          dr += val[j]*mass[j_m];
      }
      sum[i] += dr;
+     derivative[i_r] += dr;
+   }
+ }
+
+ __global__ void MapResetThreadedIndexed(unsigned int N, fptype* sum, fptype* derivative, fptype* mass, fptype* val, inttype* ia, inttype* ja, unsigned int* map, inttype offset, inttype workingN, inttype* workindex)
+ {
+   int index  = blockIdx.x * blockDim.x + threadIdx.x;
+   int stride = blockDim.x * gridDim.x;
+
+   for (int i = index; i < workingN; i+= stride ){
+     int i_r = map[workindex[i]+offset];
+     fptype dr = 0.;
+     for(unsigned int j = ia[workindex[i]]; j < ia[workindex[i]+1]; j++){
+         int j_m = map[ja[j]+offset];
+         dr += val[j]*mass[j_m];
+     }
+     sum[workindex[i]] += dr;
      derivative[i_r] += dr;
    }
  }

@@ -64,7 +64,8 @@ public:
   void reportNodeActivities(MPILib::Time sim_time);
   void mainLoop(MPILib::Time t_begin, MPILib::Time t_end, MPILib::Time t_report, bool write_displays);
 
-  void rectifyWorkingIndexes(std::vector<inttype>& off1s, std::vector<inttype>& off2s);
+  void precalcWorkingIndexes(std::vector<inttype>& off1s, std::vector<inttype>& off2s);
+  void rectifyWorkingIndexes();
 
 protected:
 
@@ -102,6 +103,11 @@ protected:
 
   std::map<MPILib::NodeId, MPILib::Index> _node_id_to_group_mesh;
   std::map<MPILib::Index, MPILib::NodeId> _group_mesh_to_node_id;
+
+  // Grid indexing
+  std::vector< std::map< MPILib::Index, std::set< MPILib::Index >>> _grid_spread;
+  std::vector< std::vector< MPILib::Index >> _current_index;
+  std::vector< unsigned int > _current_indices_in_mesh;
 
 };
 

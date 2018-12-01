@@ -55,11 +55,29 @@ namespace CudaTwoDLib {
 
               void CalculateDerivative(const std::vector<fptype>&);
 
+							void CalculateMeshGridDerivativeIndexed(const std::vector<inttype>& vecindex,
+							  const std::vector<fptype>& vecrates, const std::vector<fptype>& vecstays,
+							  const std::vector<fptype>& vecgoes, const std::vector<inttype>& vecoff1s,
+							  const std::vector<inttype>& vecoff2s, const std::vector<inttype>& vecworking);
+
+							void CalculateMeshGridDerivativeBound(const std::vector<inttype>& vecindex,
+							  const std::vector<fptype>& vecrates, const std::vector<fptype>& vecstays,
+							  const std::vector<fptype>& vecgoes, const std::vector<inttype>& vecoff1s,
+							  const std::vector<inttype>& vecoff2s, const std::vector<inttype>& sxs, const std::vector<inttype>& exs);
+
 							void CalculateMeshGridDerivative(const std::vector<inttype>&, const std::vector<fptype>&, const std::vector<fptype>&, const std::vector<fptype>&, const std::vector<inttype>&, const std::vector<inttype>&);
 
 							void CalculateGridDerivative(const std::vector<inttype>&, const std::vector<fptype>&, const std::vector<fptype>&, const std::vector<fptype>&, const std::vector<inttype>&, const std::vector<inttype>&);
 
+							void SingleTransformStepIndexed(const std::vector<inttype>& vecworking);
+
+							void SingleTransformStepBound(const std::vector<inttype>& sxs,const std::vector<inttype>& exs);
+
 							void SingleTransformStep();
+
+							void AddDerivativeFullIndexed(const std::vector<inttype>& vecworking);
+
+							void AddDerivativeFullBound(const std::vector<inttype>& sxs, const std::vector<inttype>& exs);
 
               void AddDerivative();
 

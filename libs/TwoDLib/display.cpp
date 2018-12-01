@@ -157,6 +157,7 @@ void Display::display(void) {
 	double mesh_min_h = _dws[window_index].mesh_min_h;
 	double mesh_max_h = _dws[window_index].mesh_max_h;
 
+	// warning this doesn't work.
 	// unsigned int mesh_offset = _dws[window_index]._system->Offsets()[_dws[window_index]._mesh_index];
 	// unsigned int next_mesh_offset = _dws[window_index]._system->Mass().size();
 	// if (_dws[window_index]._mesh_index < _dws[window_index]._system->Offsets().size())

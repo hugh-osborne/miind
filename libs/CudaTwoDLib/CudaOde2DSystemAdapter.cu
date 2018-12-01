@@ -56,6 +56,7 @@ _res_alpha(group.MeshObjects().size(),0),
 _res_sum(group.MeshObjects().size(),0),
 _res_to_mass(group.MeshObjects().size(),0),
 _nr_to_cells(group.MeshObjects().size(),0),
+_grid_index(group.MeshObjects().size(),0),
 _host_fs(group.MeshObjects().size(),0),
 _reset_nval(std::vector<inttype>(group.MeshObjects().size())),
 _reset_val(std::vector<fptype*>(group.MeshObjects().size())),
@@ -72,6 +73,15 @@ _numBlocks( (_n + _blockSize - 1) / _blockSize)
     this->FillReversalMap(group.MeshObjects(),group.MapReversal());
     this->FillResetMap(group.MeshObjects(),group.MapReset());
 		this->FillResetMatrixMaps(group.ResetCSR());
+		for(int m=0; m<_mesh_size; m++){
+      checkCudaErrors(cudaMalloc((inttype**)&_grid_index[m],60000*sizeof(inttype)));
+    }
+}
+
+void CudaOde2DSystemAdapter::transferGridIndex(const std::vector<std::vector<inttype>>& index){
+  for(int m=0; m<_mesh_size; m++){
+    checkCudaErrors(cudaMemcpy(_grid_index[m],&index[m][0],index[m].size()*sizeof(inttype),cudaMemcpyHostToDevice));
+  }
 }
 
 void CudaOde2DSystemAdapter::FillResetMatrixMaps(const std::vector<TwoDLib::CSRMatrix>& vecmat)
@@ -158,6 +168,15 @@ void CudaOde2DSystemAdapter::AddDerivativeFull()
   EulerStep<<<_numBlocks,_blockSize>>>(_n,_dydt,_mass, 1.0);
 }
 
+void CudaOde2DSystemAdapter::AddDerivativeFullIndexed(const std::vector<inttype>& vecworking)
+{
+  for(inttype m = 0; m < _mesh_size; m++)
+  {
+    inttype numBlocks = ((vecworking[m]) + _blockSize - 1)/_blockSize;
+    EulerStepIndexed<<<numBlocks,_blockSize>>>(_dydt,_mass,_offsets[m],vecworking[m],_grid_index[m]);
+  }
+}
+
 CudaOde2DSystemAdapter::~CudaOde2DSystemAdapter()
 {
     this->DeleteMass();
@@ -166,6 +185,9 @@ CudaOde2DSystemAdapter::~CudaOde2DSystemAdapter()
     this->DeleteReversalMap();
 		this->DeleteCSR();
     this->DeleteResetMap();
+		for(int m=0; m<_mesh_size; m++){
+      cudaFree(_grid_index[m]);
+    }
 }
 
 void CudaOde2DSystemAdapter::FillMass()
@@ -297,6 +319,23 @@ void CudaOde2DSystemAdapter::RedistributeProbabilityThreaded()
 			CudaClearDerivative<<<numSumBlocks,256>>>(numBlocks,_res_sum[m],_mass);
 
 			MapResetThreaded<<<numBlocks,256>>>(60000, _res_to_mass[m],_dydt,_mass,_reset_val[m],_reset_ia[m],_reset_ja[m],_map,_offsets[m]);
+
+			SumReset<<<numBlocks,256,256*sizeof(fptype)>>>(60000,_res_to_mass[m],_res_sum[m]);
+	}
+}
+
+void CudaOde2DSystemAdapter::RedistributeProbabilityThreadedIndexed(const std::vector<inttype>& vecworking)
+{
+	for(inttype m = 0; m < _mesh_size; m++)
+	{
+			// be careful to use this block size
+			inttype numBlocks = (60000 + 256 - 1)/256;
+			inttype numSumBlocks = (numBlocks + 256 - 1)/256;
+
+			CudaClearDerivative<<<numBlocks,256>>>(60000,_res_to_mass[m],_mass);
+			CudaClearDerivative<<<numSumBlocks,256>>>(numBlocks,_res_sum[m],_mass);
+
+			MapResetThreadedIndexed<<<numBlocks,256>>>(60000, _res_to_mass[m],_dydt,_mass,_reset_val[m],_reset_ia[m],_reset_ja[m],_map,_offsets[m], vecworking[m], _grid_index[m]);
 
 			SumReset<<<numBlocks,256,256*sizeof(fptype)>>>(60000,_res_to_mass[m],_res_sum[m]);
 	}

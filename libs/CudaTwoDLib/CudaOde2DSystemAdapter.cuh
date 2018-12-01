@@ -65,6 +65,8 @@ namespace CudaTwoDLib {
 
 								void RedistributeProbabilityThreaded();
 
+								void RedistributeProbabilityThreadedIndexed(const std::vector<inttype>& vecworking);
+
                 void MapFinish();
 
 								void MapFinishThreaded();
@@ -74,6 +76,10 @@ namespace CudaTwoDLib {
 								void ClearDerivative();
 
 								void AddDerivativeFull();
+
+								void AddDerivativeFullIndexed(const std::vector<inttype>& vecworking);
+
+								void transferGridIndex(const std::vector<std::vector<inttype>>& index);
 
                 friend class CSRAdapter;
 
@@ -144,6 +150,8 @@ namespace CudaTwoDLib {
 				std::vector<inttype*>  _reset_ia;
 				std::vector<inttype>   _reset_nja;
 				std::vector<inttype*>  _reset_ja;
+
+				std::vector<inttype*> _grid_index;
 
 				int _blockSize;
 				int _numBlocks;
