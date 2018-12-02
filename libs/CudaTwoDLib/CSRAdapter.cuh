@@ -85,6 +85,10 @@ namespace CudaTwoDLib {
 
               inttype NrIterations() const { return _nr_iterations; }
 
+							void PopulateIndexMap(std::vector< std::map< MPILib::Index, std::set< MPILib::Index >>>& _grid_spread);
+
+							void recitfyCurrentIndex();
+
         private:
 
               inttype NumberIterations(const CudaOde2DSystemAdapter&, fptype) const;
@@ -117,6 +121,12 @@ namespace CudaTwoDLib {
               std::vector<inttype> _nr_rows;
 
               fptype* _dydt;
+
+							std::vector<inttype*> _index_spread_map;
+							std::vector<inttype*> _index_spread_map_lengths;
+
+							std::vector<inttype*> _current_indexes;
+							std::vector<inttype> _current_index_length;
 
               int _blockSize;
               int _numBlocks;

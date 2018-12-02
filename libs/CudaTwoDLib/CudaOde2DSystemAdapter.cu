@@ -74,7 +74,7 @@ _numBlocks( (_n + _blockSize - 1) / _blockSize)
     this->FillResetMap(group.MeshObjects(),group.MapReset());
 		this->FillResetMatrixMaps(group.ResetCSR());
 		for(int m=0; m<_mesh_size; m++){
-      checkCudaErrors(cudaMalloc((inttype**)&_grid_index[m],60000*sizeof(inttype)));
+      checkCudaErrors(cudaMalloc((inttype**)&_grid_index[m],(60000+40)*sizeof(inttype)));
     }
 }
 

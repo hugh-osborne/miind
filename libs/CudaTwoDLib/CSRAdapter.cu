@@ -198,6 +198,37 @@ void CSRAdapter::InspectMass(inttype i)
     checkCudaErrors(cudaMemcpy(&hostvec[0],_group._mass,sizeof(fptype)*_group._n,cudaMemcpyDeviceToHost));
 }
 
+void CSRAdapter::PopulateIndexMap(std::vector< std::map< MPILib::Index, std::set< MPILib::Index >>>& _grid_spread){
+
+  for(int m=0; m<_transform_offset; m++){
+    std::vector<inttype> flattened;
+    std::vector<inttype> flattened_sizes;
+    unsigned int full_spread_count = 0;
+    for(MPILib::Index c=0; c<_nr_rows[m]; c++){
+      unsigned int count = 0;
+      std::set<MPILib::Index>::iterator it;
+      for(it = _grid_spread[m][c].begin(); it != _grid_spread[m][c].end(); it++){
+        flattened.push_back(*it);
+        count++;
+        full_spread_count++;
+      }
+      flattened_sizes.push_back(count);
+    }
+
+    std::cout << _nr_rows[m] << " " << full_spread_count << "\n";
+    checkCudaErrors(cudaMalloc((inttype**)&_index_spread_map[m],full_spread_count*sizeof(inttype)));
+    checkCudaErrors(cudaMemcpy(_index_spread_map[m],&flattened[0],full_spread_count*sizeof(inttype),cudaMemcpyHostToDevice));
+
+    checkCudaErrors(cudaMalloc((inttype**)&_index_spread_map_lengths[m],_nr_rows[m]*sizeof(inttype)));
+    checkCudaErrors(cudaMemcpy(_index_spread_map_lengths[m],&flattened_sizes[0],_nr_rows[m]*sizeof(inttype),cudaMemcpyHostToDevice));
+  }
+
+}
+
+void CSRAdapter::recitfyCurrentIndex(){
+
+}
+
 CSRAdapter::CSRAdapter(CudaOde2DSystemAdapter& group, const std::vector<TwoDLib::CSRMatrix>& vecmat,
   inttype transform_offset, inttype nr_connections, fptype euler_timestep):
 _group(group),

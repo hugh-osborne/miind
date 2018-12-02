@@ -62,7 +62,7 @@ void VectorizedNetwork::initOde2DSystem(){
 
   // All grids/meshes must have the same timestep
   TwoDLib::MasterParameter par(static_cast<MPILib::Number>(ceil(_vec_mesh[0].TimeStep()/_network_time_step)));
-  _n_steps = std::max((int)par._N_steps,10);
+  _n_steps = std::max((int)par._N_steps,20);
 
   _group_adapter = new CudaTwoDLib::CudaOde2DSystemAdapter(*(_group));
 }
@@ -129,14 +129,22 @@ void VectorizedNetwork::precalcWorkingIndexes(std::vector<inttype>& off1s, std::
 void VectorizedNetwork::rectifyWorkingIndexes() {
 
   for(int m=0; m<_grid_meshes.size(); m++) {
-    std::set<MPILib::Index> _new_current;
+    std::vector<MPILib::Index> _new_current(60000,0);
     std::vector<MPILib::Index>::iterator it;
     for(it = _current_index[m].begin(); it != _current_index[m].end(); it++){
-      if (_group->Mass()[(*it)+_group->Offsets()[m]] > 0.0000001){
-        _new_current.insert(*it);
-        _new_current.insert(_grid_spread[m][*it].begin(), _grid_spread[m][*it].end());
+      if (_group->Mass()[(*it)+_group->Offsets()[m]] > 0.000001){
+        _new_current[*it] = *it;
+        std::set<MPILib::Index>::iterator jt;
+        for(jt = _grid_spread[m][*it].begin(); jt != _grid_spread[m][*it].end(); jt++){
+          _new_current[*jt] = *jt;
+        }
       }
     }
+    auto isZero = [](unsigned int x) { return x==0; };
+    std::vector<MPILib::Index>::iterator itt = std::remove_if( _new_current.begin() , _new_current.end() , isZero);
+    _new_current.resize( itt -  _new_current.begin() );
+    // std::cout << _new_current.size() << "\n";
+
     _current_index[m] = std::vector<MPILib::Index>(_new_current.begin(), _new_current.end());
     _current_indices_in_mesh[m] = _current_index[m].size();
   }
@@ -172,7 +180,7 @@ void VectorizedNetwork::mainLoop(MPILib::Time t_begin, MPILib::Time t_end, MPILi
   const MPILib::Time h = 1./_n_steps*_vec_mesh[0].TimeStep();
 
   // Setup the OpenGL displays (if there are any required)
-	TwoDLib::Display::getInstance()->animate(write_displays, _display_nodes, _network_time_step);
+	// TwoDLib::Display::getInstance()->animate(write_displays, _display_nodes, _network_time_step);
 
   // Generate calculated transition vectors for grid derivative
   std::vector<inttype> node_to_group_meshes;
@@ -203,6 +211,8 @@ void VectorizedNetwork::mainLoop(MPILib::Time t_begin, MPILib::Time t_end, MPILi
 
   CudaTwoDLib::CSRAdapter _csr_adapter(*_group_adapter,_csrs,_grid_meshes.size(),_grid_connections.size()+_mesh_connections.size(),h);
 
+  _csr_adapter.PopulateIndexMap(_grid_spread);
+  
   MPILib::utilities::ProgressBar *pb = new MPILib::utilities::ProgressBar(n_iter);
 	MPILib::Time time = 0;
   boost::timer::auto_cpu_timer timer;
@@ -249,7 +259,7 @@ void VectorizedNetwork::mainLoop(MPILib::Time t_begin, MPILib::Time t_end, MPILi
     }
 
     _group_adapter->updateGroupMass();
-    TwoDLib::Display::getInstance()->updateDisplay(i_loop);
+    // TwoDLib::Display::getInstance()->updateDisplay(i_loop);
 		reportNodeActivities(time);
 
     (*pb)++;
