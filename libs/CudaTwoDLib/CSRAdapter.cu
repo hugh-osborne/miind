@@ -108,6 +108,7 @@ void CSRAdapter::SingleTransformStepBound(const std::vector<std::pair<unsigned i
   {
       // be careful to use this block size
       inttype numBlocks = ((exs[m].second-exs[m].first) + _blockSize - 1)/_blockSize;
+      ZeroUnboundMass<<<numBlocks,_blockSize,0,_streams[m]>>>(_nr_rows[m], _group._mass, _offsets[m], exs[m].first,exs[m].second);
       CudaSingleTransformStepBound<<<numBlocks,_blockSize,0,_streams[m]>>>(_nr_rows[m],_dydt,_group._mass,_val[m],_ia[m],_ja[m],_group._map,_offsets[m],exs[m].first,exs[m].second);
   }
 

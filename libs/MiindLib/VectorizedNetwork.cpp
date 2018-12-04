@@ -157,7 +157,7 @@ void VectorizedNetwork::rectifyWorkingBounds() {
 
     for(int it = _current_bounds[m].first; it < _current_bounds[m].second+1; it++){
 
-      if (_group->Mass()[it+_group->Offsets()[m]] > 0.00000001){
+      if (_group->Mass()[it+_group->Offsets()[m]] > 0.0000001){
         bound_min = std::min(bound_min, *_grid_spread[m][it].begin());
         bound_max = std::max(bound_max, *_grid_spread[m][it].rbegin());
       }
@@ -201,7 +201,7 @@ void VectorizedNetwork::mainLoop(MPILib::Time t_begin, MPILib::Time t_end, MPILi
   const MPILib::Time h = 1./_n_steps*_vec_mesh[0].TimeStep();
 
   // Setup the OpenGL displays (if there are any required)
-	TwoDLib::Display::getInstance()->animate(write_displays, _display_nodes, _network_time_step);
+	// TwoDLib::Display::getInstance()->animate(write_displays, _display_nodes, _network_time_step);
 
   // Generate calculated transition vectors for grid derivative
   std::vector<inttype> node_to_group_meshes;
@@ -279,7 +279,7 @@ void VectorizedNetwork::mainLoop(MPILib::Time t_begin, MPILib::Time t_end, MPILi
     }
 
     _group_adapter->updateGroupMass();
-    TwoDLib::Display::getInstance()->updateDisplay(i_loop);
+    // TwoDLib::Display::getInstance()->updateDisplay(i_loop);
 		reportNodeActivities(time);
 
     (*pb)++;

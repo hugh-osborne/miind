@@ -92,6 +92,19 @@ __global__ void EulerStepBound(fptype* derivative, fptype* mass, inttype offset,
     }
 }
 
+__global__ void ZeroUnboundMass(inttype N, fptype* mass, inttype offset, inttype sx, inttype ex){
+  int index  = blockIdx.x * blockDim.x + threadIdx.x;
+  int stride = blockDim.x * gridDim.x;
+
+  for (int i = index; i < sx; i+= stride ){
+     mass[i+offset] = 0.0;
+  }
+
+  for (int i = ex+index; i < N; i+= stride ){
+     mass[i+offset] = 0.0;
+  }
+}
+
  __global__ void MapResetIndexed(inttype n_reset, inttype* res_from, inttype* res_to, fptype* res_alpha, fptype* mass, inttype* map, fptype* rate, inttype workingN, inttype* workindex)
  {
    // run as a single kernel, this function does reduction of the firing rate

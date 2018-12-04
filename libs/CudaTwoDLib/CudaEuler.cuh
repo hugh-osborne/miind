@@ -13,6 +13,7 @@ __global__ void EulerStepBound(fptype* derivative, fptype* mass, inttype offset,
 __global__ void MapResetIndexed(unsigned int n_reset, unsigned int* res_from, unsigned int* res_to, fptype* res_alpha, fptype* mass, unsigned int* map, fptype* rate, inttype workingN, inttype* workindex);
 __global__ void ResetFinishIndexed(inttype n_reset, inttype* res_from, fptype* mass, inttype* map, inttype workingN, inttype* workindex);
 
+__global__ void ZeroUnboundMass(inttype N, fptype* mass, inttype offset, inttype sx, inttype ex);
 __global__ void MapResetThreadedIndexed(unsigned int N, fptype* sum, fptype* derivative, fptype* mass, fptype* val, inttype* ia, inttype* ja, unsigned int* map, inttype offset, inttype workingN, inttype* workindex);
 
 __global__ void CudaCalculateDerivative(inttype N, fptype rate, fptype* derivative, fptype* mass, fptype* val, inttype* ia, inttype* ja, inttype* map, inttype offset);
