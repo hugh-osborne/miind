@@ -66,14 +66,14 @@ void CSRAdapter::CalculateMeshGridDerivativeIndexed(const std::vector<inttype>& 
 void CSRAdapter::CalculateMeshGridDerivativeBound(const std::vector<inttype>& vecindex,
   const std::vector<fptype>& vecrates, const std::vector<fptype>& vecstays,
   const std::vector<fptype>& vecgoes, const std::vector<inttype>& vecoff1s,
-  const std::vector<inttype>& vecoff2s, const std::vector<inttype>& sxs, const std::vector<inttype>& exs)
+  const std::vector<inttype>& vecoff2s, const std::vector<std::pair<unsigned int, unsigned int>>& exs)
 {
   for(inttype m = 0; m < _nr_streams - (_nr_m - _transform_offset); m++)
   {
     //std::cout << _offsets[vecindex[m]] << " "<< sxs[m] << " " << exs[m] << "\n";
     // be careful to use this block size
-    inttype numBlocks = ((exs[vecindex[m]]-sxs[vecindex[m]]) + _blockSize - 1)/_blockSize;
-    CudaCalculateGridDerivativeBound<<<numBlocks,_blockSize,0,_streams[m]>>>(_group._n,vecrates[m],vecstays[m],vecgoes[m],vecoff1s[m],vecoff2s[m],_dydt,_group._mass,_offsets[vecindex[m]],sxs[vecindex[m]],exs[vecindex[m]]);
+    inttype numBlocks = ((exs[vecindex[m]].second-exs[vecindex[m]].first) + _blockSize - 1)/_blockSize;
+    CudaCalculateGridDerivativeBound<<<numBlocks,_blockSize,0,_streams[m]>>>(_group._n,vecrates[m],vecstays[m],vecgoes[m],vecoff1s[m],vecoff2s[m],_dydt,_group._mass,_offsets[vecindex[m]],exs[vecindex[m]].first,exs[vecindex[m]].second);
   }
 
   inttype m = _transform_offset;
@@ -102,13 +102,13 @@ void CSRAdapter::SingleTransformStepIndexed(const std::vector<inttype>& vecworki
       cudaStreamSynchronize(_streams[m]);
 }
 
-void CSRAdapter::SingleTransformStepBound(const std::vector<inttype>& sxs,const std::vector<inttype>& exs)
+void CSRAdapter::SingleTransformStepBound(const std::vector<std::pair<unsigned int, unsigned int>>& exs)
 {
   for(inttype m = 0; m < _transform_offset; m++)
   {
       // be careful to use this block size
-      inttype numBlocks = ((exs[m]-sxs[m]) + _blockSize - 1)/_blockSize;
-      CudaSingleTransformStepBound<<<numBlocks,_blockSize,0,_streams[m]>>>(_nr_rows[m],_dydt,_group._mass,_val[m],_ia[m],_ja[m],_group._map,_offsets[m],sxs[m],exs[m]);
+      inttype numBlocks = ((exs[m].second-exs[m].first) + _blockSize - 1)/_blockSize;
+      CudaSingleTransformStepBound<<<numBlocks,_blockSize,0,_streams[m]>>>(_nr_rows[m],_dydt,_group._mass,_val[m],_ia[m],_ja[m],_group._map,_offsets[m],exs[m].first,exs[m].second);
   }
 
   for (inttype m = 0; m < _transform_offset; m++)
@@ -127,12 +127,12 @@ void CSRAdapter::AddDerivativeFullIndexed(const std::vector<inttype>& vecworking
       cudaStreamSynchronize(_streams[m]);
 }
 
-void CSRAdapter::AddDerivativeFullBound(const std::vector<inttype>& sxs, const std::vector<inttype>& exs)
+void CSRAdapter::AddDerivativeFullBound(const std::vector<std::pair<unsigned int, unsigned int>>& exs)
 {
   for(inttype m = 0; m < _transform_offset; m++)
   {
-    inttype numBlocks = ((exs[m]-sxs[m]) + _blockSize - 1)/_blockSize;
-    EulerStepBound<<<_numBlocks,_blockSize,0,_streams[m]>>>(_dydt,_group._mass,sxs[m],exs[m]);
+    inttype numBlocks = ((exs[m].second-exs[m].first) + _blockSize - 1)/_blockSize;
+    EulerStepBound<<<_numBlocks,_blockSize,0,_streams[m]>>>(_dydt,_group._mass,_offsets[m],exs[m].first,exs[m].second);
   }
 
   for (inttype m = 0; m < _transform_offset; m++)

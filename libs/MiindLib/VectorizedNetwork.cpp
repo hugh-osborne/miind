@@ -53,8 +53,7 @@ void VectorizedNetwork::initOde2DSystem(){
     _group->Initialize(i,coords[0][0],coords[0][1]);
 
     //setup initial working index space for each grid mesh
-    _current_index.push_back({_group->Map(i, coords[0][0],coords[0][1])-_group->Offsets()[i]});
-    _current_indices_in_mesh.push_back(1);
+    _current_bounds.push_back(std::pair<unsigned int, unsigned int>(_group->Map(i, coords[0][0],coords[0][1])-_group->Offsets()[i], _group->Map(i, coords[0][0],coords[0][1])-_group->Offsets()[i]));
 
     //create CSR Matrix for each transforms
     _csrs.push_back(TwoDLib::CSRMatrix(_vec_transforms[i], *(_group), i));
@@ -150,6 +149,28 @@ void VectorizedNetwork::rectifyWorkingIndexes() {
   }
 }
 
+void VectorizedNetwork::rectifyWorkingBounds() {
+
+  for(int m=0; m<_grid_meshes.size(); m++) {
+    unsigned int bound_min = _group->Mass().size();
+    unsigned int bound_max = 0;
+
+    for(int it = _current_bounds[m].first; it < _current_bounds[m].second+1; it++){
+
+      if (_group->Mass()[it+_group->Offsets()[m]] > 0.00000001){
+        bound_min = std::min(bound_min, *_grid_spread[m][it].begin());
+        bound_max = std::max(bound_max, *_grid_spread[m][it].rbegin());
+      }
+
+    }
+
+    _current_bounds[m].first = bound_min;
+    _current_bounds[m].second = bound_max;
+  }
+
+
+}
+
 void VectorizedNetwork::reportNodeActivities(MPILib::Time sim_time){
   for (int i=0; i<_rate_nodes.size(); i++){
 		std::ostringstream ost2;
@@ -180,7 +201,7 @@ void VectorizedNetwork::mainLoop(MPILib::Time t_begin, MPILib::Time t_end, MPILi
   const MPILib::Time h = 1./_n_steps*_vec_mesh[0].TimeStep();
 
   // Setup the OpenGL displays (if there are any required)
-	// TwoDLib::Display::getInstance()->animate(write_displays, _display_nodes, _network_time_step);
+	TwoDLib::Display::getInstance()->animate(write_displays, _display_nodes, _network_time_step);
 
   // Generate calculated transition vectors for grid derivative
   std::vector<inttype> node_to_group_meshes;
@@ -211,8 +232,6 @@ void VectorizedNetwork::mainLoop(MPILib::Time t_begin, MPILib::Time t_end, MPILi
 
   CudaTwoDLib::CSRAdapter _csr_adapter(*_group_adapter,_csrs,_grid_meshes.size(),_grid_connections.size()+_mesh_connections.size(),h);
 
-  _csr_adapter.PopulateIndexMap(_grid_spread);
-  
   MPILib::utilities::ProgressBar *pb = new MPILib::utilities::ProgressBar(n_iter);
 	MPILib::Time time = 0;
   boost::timer::auto_cpu_timer timer;
@@ -227,25 +246,26 @@ void VectorizedNetwork::mainLoop(MPILib::Time t_begin, MPILib::Time t_end, MPILi
       rates.push_back(_out_rates[_mesh_connections[i]._in]*_mesh_connections[i]._n_connections);
     }
 
-    rectifyWorkingIndexes();
-    _group_adapter->transferGridIndex(_current_index);
+    rectifyWorkingBounds();
 
 		_group_adapter->Evolve(_mesh_meshes);
 
     _csr_adapter.ClearDerivative();
     // _csr_adapter.SingleTransformStep();
-    _csr_adapter.SingleTransformStepIndexed(_current_indices_in_mesh);
-    _csr_adapter.AddDerivativeFullIndexed(_current_indices_in_mesh);
+    _csr_adapter.SingleTransformStepBound(_current_bounds);
+    _csr_adapter.AddDerivativeFullBound(_current_bounds);
+    // _csr_adapter.AddDerivativeFull();
 
     _group_adapter->ClearDerivative();
-    _group_adapter->RedistributeProbabilityThreadedIndexed(_current_indices_in_mesh);
-    _group_adapter->AddDerivativeFullIndexed(_current_indices_in_mesh);
+    _group_adapter->RedistributeProbabilityThreaded();
+    _group_adapter->AddDerivativeFull();
 
     _group_adapter->MapFinishThreaded();
 
 		for (MPILib::Index i_part = 0; i_part < _n_steps; i_part++ ){
 			_csr_adapter.ClearDerivative();
-      _csr_adapter.CalculateMeshGridDerivativeIndexed(node_to_group_meshes, rates, stays, goes, off1s, off2s, _current_indices_in_mesh);
+      // _csr_adapter.CalculateMeshGridDerivative(node_to_group_meshes, rates, stays, goes, off1s, off2s);
+      _csr_adapter.CalculateMeshGridDerivativeBound(node_to_group_meshes, rates, stays, goes, off1s, off2s,_current_bounds);
 			_csr_adapter.AddDerivative();
 		}
 
@@ -259,7 +279,7 @@ void VectorizedNetwork::mainLoop(MPILib::Time t_begin, MPILib::Time t_end, MPILi
     }
 
     _group_adapter->updateGroupMass();
-    // TwoDLib::Display::getInstance()->updateDisplay(i_loop);
+    TwoDLib::Display::getInstance()->updateDisplay(i_loop);
 		reportNodeActivities(time);
 
     (*pb)++;

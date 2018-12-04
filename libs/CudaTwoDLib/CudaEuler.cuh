@@ -9,7 +9,7 @@ __global__ void CudaSingleTransformStepBound(inttype N, fptype* derivative, fpty
 __global__ void CudaCalculateGridDerivativeIndexed(inttype N, fptype rate, fptype stays, fptype goes, inttype offset_1, inttype offset_2, fptype* derivative, fptype* mass, inttype offset, inttype workingN, inttype* workindex);
 __global__ void CudaCalculateGridDerivativeBound(inttype N, fptype rate, fptype stays, fptype goes, inttype offset_1, inttype offset_2, fptype* derivative, fptype* mass, inttype offset, inttype sx, inttype ex);
 __global__ void EulerStepIndexed(fptype* derivative, fptype* mass, inttype offset, inttype workingN, inttype* workindex);
-__global__ void EulerStepBound(fptype* derivative, fptype* mass, inttype sx, inttype ex);
+__global__ void EulerStepBound(fptype* derivative, fptype* mass, inttype offset, inttype sx, inttype ex);
 __global__ void MapResetIndexed(unsigned int n_reset, unsigned int* res_from, unsigned int* res_to, fptype* res_alpha, fptype* mass, unsigned int* map, fptype* rate, inttype workingN, inttype* workindex);
 __global__ void ResetFinishIndexed(inttype n_reset, inttype* res_from, fptype* mass, inttype* map, inttype workingN, inttype* workindex);
 

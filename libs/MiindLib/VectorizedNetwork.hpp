@@ -66,6 +66,7 @@ public:
 
   void precalcWorkingIndexes(std::vector<inttype>& off1s, std::vector<inttype>& off2s);
   void rectifyWorkingIndexes();
+  void rectifyWorkingBounds();
 
 protected:
 
@@ -108,6 +109,7 @@ protected:
   std::vector< std::map< MPILib::Index, std::set< MPILib::Index >>> _grid_spread;
   std::vector< std::vector< MPILib::Index >> _current_index;
   std::vector< unsigned int > _current_indices_in_mesh;
+  std::vector<std::pair<unsigned int, unsigned int>> _current_bounds;
 
 
 

@@ -63,7 +63,7 @@ namespace CudaTwoDLib {
 							void CalculateMeshGridDerivativeBound(const std::vector<inttype>& vecindex,
 							  const std::vector<fptype>& vecrates, const std::vector<fptype>& vecstays,
 							  const std::vector<fptype>& vecgoes, const std::vector<inttype>& vecoff1s,
-							  const std::vector<inttype>& vecoff2s, const std::vector<inttype>& sxs, const std::vector<inttype>& exs);
+							  const std::vector<inttype>& vecoff2s, const std::vector<std::pair<unsigned int, unsigned int>>& exs);
 
 							void CalculateMeshGridDerivative(const std::vector<inttype>&, const std::vector<fptype>&, const std::vector<fptype>&, const std::vector<fptype>&, const std::vector<inttype>&, const std::vector<inttype>&);
 
@@ -71,13 +71,13 @@ namespace CudaTwoDLib {
 
 							void SingleTransformStepIndexed(const std::vector<inttype>& vecworking);
 
-							void SingleTransformStepBound(const std::vector<inttype>& sxs,const std::vector<inttype>& exs);
+							void SingleTransformStepBound(const std::vector<std::pair<unsigned int, unsigned int>>& exs);
 
 							void SingleTransformStep();
 
 							void AddDerivativeFullIndexed(const std::vector<inttype>& vecworking);
 
-							void AddDerivativeFullBound(const std::vector<inttype>& sxs, const std::vector<inttype>& exs);
+							void AddDerivativeFullBound(const std::vector<std::pair<unsigned int, unsigned int>>& exs);
 
               void AddDerivative();
 

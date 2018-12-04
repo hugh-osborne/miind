@@ -25,10 +25,10 @@ __global__ void CudaSingleTransformStepBound(inttype N, fptype* derivative, fpty
     int stride = blockDim.x * gridDim.x;
 
     for (int i = sx+index; i < ex; i+= stride ){
-      int i_r = map[i];
+      int i_r = map[i+offset];
       fptype dr = 0.;
-      for(unsigned int j = ia[i-offset]; j < ia[i-offset+1]; j++){
-          int j_m = map[ja[j]];
+      for(unsigned int j = ia[i]; j < ia[i+1]; j++){
+          int j_m = map[ja[j]+offset];
           dr += val[j]*mass[j_m];
       }
       dr -= mass[i_r];
@@ -61,13 +61,15 @@ __global__ void CudaCalculateGridDerivativeBound(inttype N, fptype rate, fptype 
     int stride = blockDim.x * gridDim.x;
 
     for (int i = sx+index; i < ex; i+= stride ){
+      int io = i+offset;
       fptype dr = 0.;
-      dr += stays*mass[((((i+offset_1)%N)+N) % N)];
-  		dr += goes*mass[((((i+offset_2)%N)+N) % N)];
+      dr += stays*mass[((((io+offset_1)%N)+N) % N)];
+  		dr += goes*mass[((((io+offset_2)%N)+N) % N)];
 
-      dr -= mass[i];
-      derivative[i] += rate*dr;
+      dr -= mass[io];
+      derivative[io] += rate*dr;
     }
+
 }
 
 __global__ void EulerStepIndexed(fptype* derivative, fptype* mass, inttype offset, inttype workingN, inttype* workindex)
@@ -80,13 +82,13 @@ __global__ void EulerStepIndexed(fptype* derivative, fptype* mass, inttype offse
   }
 }
 
-__global__ void EulerStepBound(fptype* derivative, fptype* mass, inttype sx, inttype ex)
+__global__ void EulerStepBound(fptype* derivative, fptype* mass, inttype offset, inttype sx, inttype ex)
 {
     int index  = blockIdx.x * blockDim.x + threadIdx.x;
     int stride = blockDim.x * gridDim.x;
 
     for (int i = sx+index; i < ex; i+= stride ){
-       mass[i] += derivative[i];
+       mass[i+offset] += derivative[i+offset];
     }
 }
 
