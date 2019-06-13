@@ -39,6 +39,17 @@ void CSRMatrix::Initialize(const TransitionMatrix& mat, MPILib::Index mesh_index
 		for(MPILib::Index j = 0; j < m.NrCellsInStrip(i); j++)
 			counter++;
 
+	_vec_mat = vector< vector<MPILib::Index> >(counter);
+	_mat_vals = vector< vector<double> >(counter);
+
+	for (auto& line: matrix){
+		for (auto& r: line._vec_to_line){
+			// Map produces the index relative to the full matrix, it needs to be reduced to the row index within the current submatrix
+			_vec_mat[_sys.Map(mesh_index,line._from[0],line._from[1]) - _i_offset].push_back(_sys.Map(mesh_index, r._to[0],r._to[1]) - _i_offset);
+			_mat_vals[_sys.Map(mesh_index,line._from[0],line._from[1]) - _i_offset].push_back(r._fraction);
+		}
+	}
+
 	vector< vector<MPILib::Index> > vec_mat(counter);
 	vector< vector<double> > mat_vals(counter);
 
@@ -70,6 +81,7 @@ _val(0),
 _ia(0),
 _ja(0),
 _mesh_index(mesh_index),
+add_inds(100),
 _i_offset(sys.Offsets()[mesh_index])
 {
 	Initialize(mat,mesh_index);
@@ -138,6 +150,29 @@ void CSRMatrix::MV(vector<double>& out, const vector<double>& in){
 	}
 }
 
+void CSRMatrix::MVIndexed(vector<double>& out, const vector<double>& in, std::unordered_set<unsigned int>& indices){
+	MPILib::Index nr_rows = _ia.size();
+
+#pragma omp parallel for
+	for(unsigned int i=0; i<add_inds.size(); i++)
+		add_inds[i] = 0;
+
+	unsigned int b = 0;
+
+	for (MPILib::Index i : indices){
+		for (MPILib::Index a = 0; a < _vec_mat[i].size(); a++){
+			unsigned int j = _vec_mat[i][a];
+			out[j] += in[i] * _mat_vals[i][a];
+			if(add_inds.size() < b+1)
+				add_inds.resize(b+1);
+			add_inds[b] = j;
+			b++;
+		}
+	}
+
+	for(unsigned int i=0; i<b-1; i++)
+		indices.insert(add_inds[i]);
+}
 
 void CSRMatrix::MVMapped
 (

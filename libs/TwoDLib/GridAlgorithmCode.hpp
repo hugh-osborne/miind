@@ -36,6 +36,7 @@ namespace TwoDLib {
 	_sys(_vec_mesh,_vec_vec_rev,_vec_vec_res,_vec_tau_refractive),
 	_n_evolve(0),
 	_n_steps(0),
+	_cell_indices(),
 	_sysfunction(rate_method == "AvgV" ? &TwoDLib::Ode2DSystemGroup::AvgV : &TwoDLib::Ode2DSystemGroup::F),
 	_start_v(start_v),
 	_start_w(start_w),
@@ -47,6 +48,7 @@ namespace TwoDLib {
 
 		_sys.Initialize(0,coords[0][0],coords[0][1]);
 
+		_cell_indices.insert(_sys.Map(0,coords[0][0],coords[0][1]));
 	}
 
 	GridAlgorithm::GridAlgorithm(const GridAlgorithm& rhs):
@@ -63,6 +65,7 @@ namespace TwoDLib {
 	_sys(_vec_mesh,_vec_vec_rev,_vec_vec_res,_vec_tau_refractive),
 	_n_evolve(0),
 	_n_steps(0),
+	_cell_indices(),
 	_sysfunction(rhs._sysfunction),
 	_start_v(rhs._start_v),
 	_start_w(rhs._start_w),
@@ -74,6 +77,7 @@ namespace TwoDLib {
 
 		_sys.Initialize(0,coords[0][0],coords[0][1]);
 
+		_cell_indices.insert(_sys.Map(0,coords[0][0],coords[0][1]));
 	}
 
 	GridAlgorithm* GridAlgorithm::clone() const
@@ -206,6 +210,10 @@ namespace TwoDLib {
 			else
 			  ; // else is fine
 		}
+
+		//insert reset cells to index
+		for(Redistribution r : _vec_vec_res[0])
+			_cell_indices.insert(_sys.Map(0,r._to[0], r._to[1]));
 	    // mass rotation
 	    for (MPILib::Index i = 0; i < _n_steps; i++){
 
@@ -214,12 +222,13 @@ namespace TwoDLib {
 				 for(unsigned int id = 0; id < _mass_swap.size(); id++)
 					  _mass_swap[id] = 0.;
 
+			 	// _csr_transform->MVIndexed(_mass_swap,_sys._vec_mass, _cell_indices);
 			 	_csr_transform->MV(_mass_swap,_sys._vec_mass);
 
 				_sys._vec_mass = _mass_swap;
 	    }
 
-			// WARNING: originally reset goes afvirtual void applyMasterSolver();ter master but this way,
+			// WARNING: originally reset goes after applyMasterSolver but this way,
 			// we can guarantee there's no mass above threshold when running
 			// MVGrid in MasterGrid
 			_sys.RedistributeProbability(_n_steps);
@@ -243,6 +252,7 @@ namespace TwoDLib {
 	}
 
 	void GridAlgorithm::applyMasterSolver(std::vector<MPILib::Rate> rates) {
+			// _p_master->Convolve(_n_steps*_dt,rates,_efficacy_map,_cell_indices);
 			_p_master->Apply(_n_steps*_dt,rates,_efficacy_map);
 	}
 

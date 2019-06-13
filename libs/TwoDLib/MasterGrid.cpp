@@ -32,6 +32,11 @@
 ):
 _sys(sys),
 _dydt(sys._vec_mass.size(),0.),
+_window_size(251),
+_mass_window(_window_size,0.),
+_dydt_window(_window_size,0.),
+add_inds(100),
+subtract_inds(100),
 _cell_width(cell_width)
  {
  }
@@ -118,6 +123,26 @@ _cell_width(cell_width)
  	}
  }
 
+ void MasterGrid::CalculateWindows(double t_step, const vector<double>& rates, vector<double>& efficacy_map){
+   _p_vec_eff   = &efficacy_map;
+	 _p_vec_rates = &rates;
+
+#pragma omp parallel for
+   for(unsigned int id = 0; id < _mass_window.size(); id++){
+     _mass_window[id] = 0.;
+     _dydt_window[id] = 0.;
+   }
+
+   _mass_window[(int)(_window_size/2)] = 0.001;
+
+	 typedef boost::numeric::odeint::runge_kutta_cash_karp54< vector<double> > error_stepper_type;
+	 typedef boost::numeric::odeint::controlled_runge_kutta< error_stepper_type > controlled_stepper_type;
+	 controlled_stepper_type controlled_stepper;
+
+	 boost::numeric::odeint::integrate_adaptive(boost::numeric::odeint::make_controlled< error_stepper_type >( 1.0e-6 , 1.0e-6 ),
+			 *this , _mass_window, 0.0 , t_step , 1e-4 );
+ }
+
  void MasterGrid::Apply(double t_step, const vector<double>& rates, vector<double>& efficacy_map) {
    _p_vec_eff   = &efficacy_map;
 	 _p_vec_rates = &rates;
@@ -128,6 +153,54 @@ _cell_width(cell_width)
 
 	 boost::numeric::odeint::integrate_adaptive(boost::numeric::odeint::make_controlled< error_stepper_type >( 1.0e-6 , 1.0e-6 ),
 			 *this , _sys._vec_mass , 0.0 , t_step , 1e-4 );
+ }
+
+ void MasterGrid::Convolve(double t_step, const vector<double>& rates, vector<double>& efficacy_map, std::unordered_set<unsigned int>& cell_indices){
+   CalculateWindows(t_step, rates, efficacy_map);
+
+#pragma omp parallel for
+    for(unsigned int id = 0; id < _dydt.size(); id++)
+      _dydt[id] = 0.;
+
+#pragma omp parallel for
+   	for(unsigned int i=0; i<add_inds.size(); i++)
+   		add_inds[i] = 0;
+
+#pragma omp parallel for
+   	for(unsigned int i=0; i<subtract_inds.size(); i++)
+   		subtract_inds[i] = 0;
+
+    unsigned int aa = 0;
+    unsigned int ai = 0;
+
+   for (unsigned int m : cell_indices){
+     for(unsigned int i = 0; i < _mass_window.size(); i++){
+       if(_mass_window[i] > 0.0000001){
+         unsigned int ind = (((m - (int)(_window_size/2) + i)%(int)_dydt.size()+(int)_dydt.size()) % (int)_dydt.size());
+         if(add_inds.size() < aa+1)
+          add_inds.resize(aa+1);
+         add_inds[aa] = ind;
+         aa++;
+         _dydt[ind] += 1000 * _mass_window[i] * _sys._vec_mass[m];
+      }
+     }
+     if(_sys._vec_mass[m] < 0.00000000000001){
+       if(subtract_inds.size() < ai+1)
+        subtract_inds.resize(ai+1);
+       subtract_inds[ai] = m;
+       ai++;
+     }
+   }
+
+   for(int n=0; n<aa-1; n++)
+     cell_indices.insert(add_inds[n]);
+
+   for(int n=0; n<ai-1; n++)
+      cell_indices.erase(subtract_inds[n]);
+
+#pragma omp parallel for
+   for (int m=0; m<_sys._vec_mass.size(); m++)
+      _sys._vec_mass[m] = _dydt[m];
  }
 
  void MasterGrid::operator()(const vector<double>& vec_mass, vector<double>& dydt, const double)

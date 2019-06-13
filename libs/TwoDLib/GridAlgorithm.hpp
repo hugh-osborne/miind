@@ -112,6 +112,8 @@ namespace TwoDLib {
 		vector<double>								_mass_swap;
 		vector<double>								_efficacy_map;
 
+		std::unordered_set<unsigned int> _cell_indices;
+
 		std::string _transform_matrix;
 
 		double _start_v;

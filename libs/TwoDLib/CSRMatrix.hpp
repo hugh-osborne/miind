@@ -22,6 +22,7 @@
 #include <MPILib/include/TypeDefinitions.hpp>
 #include "Ode2DSystemGroup.hpp"
 #include "TransitionMatrix.hpp"
+#include <unordered_set>
 
 
 namespace TwoDLib {
@@ -78,6 +79,8 @@ namespace TwoDLib {
 		//! Number of rows corresponding this this matrix
 		MPILib::Index NrRows() const { return _ia.size() - 1; }
 
+		void MVIndexed(vector<double>& out, const vector<double>& in, std::unordered_set<unsigned int>& indices);
+
 	private:
 
 		void Initialize(const TransitionMatrix&, MPILib::Index);
@@ -91,6 +94,10 @@ namespace TwoDLib {
 		std::vector<double>       _val;
 		std::vector<unsigned int> _ia;
 		std::vector<unsigned int> _ja;
+
+		vector< vector<MPILib::Index> > _vec_mat;
+		vector< vector<double> > _mat_vals;
+		vector<unsigned int> add_inds;
 
 		MPILib::Index _mesh_index;  // index of the Mesh on the Ode2DSystemGroup that this CSRMatrix is responsible for
 		MPILib::Index _i_offset;    // offset of the part of the mass array that this CSRMatrix is responsible for

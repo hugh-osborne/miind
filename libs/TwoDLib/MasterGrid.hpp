@@ -24,6 +24,7 @@
 #include "TransitionMatrix.hpp"
 #include "Ode2DSystemGroup.hpp"
 #include "MasterParameter.hpp"
+#include <unordered_set>
 
 namespace TwoDLib {
 
@@ -56,6 +57,9 @@ namespace TwoDLib {
 		void CalculateStaticEfficiacies(vector<double>& efficacy_map);
 		void CalculateStaticEfficiaciesForConductance(vector<double>& efficacy_map, vector<double>& rest_v);
 
+		void CalculateWindows(double t_step, const vector<double>& rates, vector<double>& efficacy_map);
+		void Convolve(double t_step, const vector<double>& rates, vector<double>& efficacy_map, std::unordered_set<unsigned int>& cell_indices);
+
 		void Apply(double t_step, const vector<double>& rates, vector<double>& efficacy_map);
 
 		void operator()(const vector<double>&, vector<double>&, const double t = 0);
@@ -74,6 +78,11 @@ namespace TwoDLib {
 		vector<vector<int>>				_offset1;
 		vector<vector<int>>				_offset2;
 
+		unsigned int _window_size;
+		vector<double> _dydt_window;
+		vector<double> _mass_window;
+		vector<unsigned int> add_inds;
+    vector<unsigned int> subtract_inds;
 
 		const vector<double>* _p_vec_eff;
 		const vector<double>* _p_vec_rates;
