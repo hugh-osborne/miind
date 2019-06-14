@@ -86,6 +86,8 @@ _vec_vs(MeshVs(mesh_list)),
 _vec_length(InitializeLengths(mesh_list)),
 _vec_cumulative(InitializeCumulatives(mesh_list)),
 _vec_mass(InitializeMass()),
+_individuals(10000),
+_index_to_coords(InitializeCoords()),
 _vec_area(InitializeArea(mesh_list)),
 _t(0),
 _fs(std::vector<MPILib::Rate>(mesh_list.size(),0.0)),
@@ -119,6 +121,8 @@ _vec_length(InitializeLengths(mesh_list)),
 _vec_cumulative(InitializeCumulatives(mesh_list)),
 _vec_mass(InitializeMass()),
 _vec_area(InitializeArea(mesh_list)),
+_individuals(10000),
+_index_to_coords(InitializeCoords()),
 _t(0),
 _fs(std::vector<MPILib::Rate>(mesh_list.size(),0.0)),
 _avs(std::vector<MPILib::Potential>(mesh_list.size(),0.0)),
@@ -232,9 +236,11 @@ vector<MPILib::Potential> Ode2DSystemGroup::InitializeArea(const std::vector<Mes
 {
 	vector<MPILib::Potential> vec_ret;
 	for (const Mesh& m: _mesh_list){
-		for (unsigned int i = 0; i < m.NrStrips(); i++)
-			for (unsigned int j = 0; j < m.NrCellsInStrip(i); j++ )
+		for (unsigned int i = 0; i < m.NrStrips(); i++){
+			for (unsigned int j = 0; j < m.NrCellsInStrip(i); j++ ){
 				vec_ret.push_back(m.Quad(i,j).SignedArea());
+			}
+		}
 	}
 	return vec_ret;
 }
@@ -243,10 +249,26 @@ void Ode2DSystemGroup::Initialize(MPILib::Index m, MPILib::Index i, MPILib::Inde
 	_vec_mass[this->Map(m,i,j)] = 1.0;
 }
 
+std::vector<Coordinates> Ode2DSystemGroup::InitializeCoords() const
+{
+	std::vector<Coordinates> coords;
+	MPILib::Index count = 0;
+
+	for(const Mesh& mesh: _mesh_list){
+		for (MPILib::Index i = 0; i < mesh.NrStrips();i++){
+			for (MPILib::Index j = 0; j < mesh.NrCellsInStrip(i); j++){
+				coords.push_back(Coordinates(i,j));
+			}
+		}
+	}
+	return coords;
+}
+
 std::vector< std::vector< std::vector<MPILib::Index> > > Ode2DSystemGroup::InitializeMap() const
 {
 	std::vector< std::vector<std::vector<MPILib::Index> > > vec_map;
 	MPILib::Index count = 0;
+
 
 	for(const Mesh& mesh: _mesh_list){
 		std::vector<std::vector<MPILib::Index> > vec_mesh;
@@ -259,6 +281,7 @@ std::vector< std::vector< std::vector<MPILib::Index> > > Ode2DSystemGroup::Initi
 		}
 		vec_map.push_back(vec_mesh);
 	}
+
 	return vec_map;
 }
 
@@ -397,6 +420,20 @@ void Ode2DSystemGroup::RedistributeProbability(MPILib::Number steps)
 void Ode2DSystemGroup::RedistributeProbability()
 {
 	RedistributeProbability(1);
+}
+
+void Ode2DSystemGroup::RedistributeIndividual(std::vector<unsigned int>& individuals, MPILib::Number steps){
+	// for(unsigned int i : individuals){
+	//  double r1 = (rand() % 10000) / 10000.0;
+	//  unsigned int idx = 0;
+	//  double total = 0.0;
+	//  while( total < r1 ){
+	// 	 total += 1000 * _mass_window[idx];
+	// 	 idx++;
+	//  }
+	//  unsigned int f = (((i - (int)(_window_size/2) + idx)%(int)_dydt.size()+(int)_dydt.size()) % (int)_dydt.size());
+	//  individuals[i] = f;
+	//  }
 }
 
 const std::vector<MPILib::Potential>& Ode2DSystemGroup::AvgV() const

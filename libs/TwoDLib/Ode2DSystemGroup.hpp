@@ -77,6 +77,8 @@ namespace TwoDLib {
 				unsigned int jcell    //! cell number
 				) const {return _map[kmesh][istrip][jcell];}
 
+		Coordinates toCoords(unsigned int index) const { return _index_to_coords[index]; }
+
 		//! Takes an index for the mass array and converts to the mapped version. This is used in the Master equation solvers
 		MPILib::Index Map(MPILib::Index i) const{ return _linear_map[i]; }
 
@@ -100,6 +102,8 @@ namespace TwoDLib {
 
 		void RedistributeProbability(MPILib::Number);
 
+		void RedistributeIndividual(std::vector<unsigned int>& individuals, MPILib::Number steps);
+
 		//! Return the instantaneous firing rate
 		const vector<MPILib::Rate>& F() const {return _fs;}
 
@@ -122,6 +126,8 @@ namespace TwoDLib {
 	    vector<MPILib::Mass>& Mass() { return _vec_mass; }
 
 		const std::vector<double>& Vs() const { return _vec_vs; }
+
+		void setIndividuals(vector<unsigned int> individuals) {_individuals = individuals; }
 
 	    //! Provide read access to the Reversal map
 		const std::vector<std::vector<Redistribution> >& MapReversal() const { return  _vec_reversal;}
@@ -275,6 +281,7 @@ namespace TwoDLib {
 		vector<MPILib::Mass>        InitializeMass() const;
 
 		std::vector< std::vector< std::vector<MPILib::Index> > > InitializeMap() const;
+		std::vector<Coordinates> InitializeCoords() const;
 		std::vector< MPILib::Index> InitializeLinearMap();
 		std::vector< MPILib::Index> InitializeWorkingIndex();
 		void 									UpdateMap(std::vector<MPILib::Index>& meshes);
@@ -290,6 +297,7 @@ namespace TwoDLib {
 		std::vector<MPILib::Time>    _vec_tau_refractive;
 public:
 		vector<MPILib::Mass>	     	_vec_mass;
+		vector<unsigned int> _individuals;
 private:
 		vector<MPILib::Potential>		_vec_area;
 
@@ -299,6 +307,7 @@ private:
 
 		std::vector< std::vector<std::vector<MPILib::Index> > > _map;
 		std::vector< MPILib::Index> _linear_map;
+	  std::vector< Coordinates > _index_to_coords;
 
 		std::vector<std::vector<Redistribution> > _vec_reversal;
 		std::vector<std::vector<Redistribution> > _vec_reset;

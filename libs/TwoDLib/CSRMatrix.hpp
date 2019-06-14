@@ -81,6 +81,8 @@ namespace TwoDLib {
 
 		void MVIndexed(vector<double>& out, const vector<double>& in, std::unordered_set<unsigned int>& indices);
 
+		void MVIndividual(std::vector<unsigned int>& individuals);
+
 	private:
 
 		void Initialize(const TransitionMatrix&, MPILib::Index);

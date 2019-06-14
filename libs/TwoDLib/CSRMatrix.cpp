@@ -25,6 +25,8 @@
 #include "CSRMatrix.hpp"
 #include "Ode2DSystem.hpp"
 #include "TwoDLibException.hpp"
+#include <stdlib.h>
+#include <time.h>
 using namespace TwoDLib;
 
 void CSRMatrix::Initialize(const TransitionMatrix& mat, MPILib::Index mesh_index){
@@ -85,6 +87,7 @@ add_inds(100),
 _i_offset(sys.Offsets()[mesh_index])
 {
 	Initialize(mat,mesh_index);
+	srand (time(NULL));
 }
 
 void CSRMatrix::Validate(const TransitionMatrix& mat){
@@ -172,6 +175,20 @@ void CSRMatrix::MVIndexed(vector<double>& out, const vector<double>& in, std::un
 
 	for(unsigned int i=0; i<b-1; i++)
 		indices.insert(add_inds[i]);
+}
+
+void CSRMatrix::MVIndividual(std::vector<unsigned int>& individuals){
+#pragma omp parallel for
+	for(unsigned int i=0; i<individuals.size(); i++){
+		double r1 = (rand() % 1000) / 1000.0;
+		unsigned int idx = 0;
+		double total = _mat_vals[individuals[i]][idx];
+		while( total < r1 ){
+			idx++;
+			total += _mat_vals[individuals[i]][idx];
+		}
+		individuals[i] = _vec_mat[individuals[i]][idx];
+	}
 }
 
 void CSRMatrix::MVMapped

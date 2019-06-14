@@ -154,23 +154,26 @@ void Display::display(void) {
 	double mesh_min_h = _dws[window_index].mesh_min_h;
 	double mesh_max_h = _dws[window_index].mesh_max_h;
 
-	for(unsigned int i = 0; i<m.NrStrips(); i++){
-		for(unsigned int j = 0; j<m.NrCellsInStrip(i); j++) {
-			unsigned int idx = _dws[window_index]._system->Map(_dws[window_index]._mesh_index,i,j);
-			Quadrilateral q = m.Quad(i,j);
-			double cell_area = std::abs(q.SignedArea());
-			double mass = 0.0;
-			if (_dws[window_index]._system->Mass()[idx]/cell_area != 0)
-				mass = std::min(1.0,std::max(0.0,(log10(_dws[window_index]._system->Mass()[idx]/cell_area) - min) / (max-min)));
+	// for(unsigned int i = 0; i<m.NrStrips(); i++){
+	// 	for(unsigned int j = 0; j<m.NrCellsInStrip(i); j++) {
+		for(unsigned int idx : _dws[window_index]._system->_individuals){
+			// unsigned int idx = _dws[window_index]._system->Map(_dws[window_index]._mesh_index,i,j);
+			Coordinates c = _dws[window_index]._system->toCoords(idx);
+			Quadrilateral q = m.Quad(c[0],c[1]);
+			// double cell_area = std::abs(q.SignedArea());
+			// double mass = 0.0;
+			// if (_dws[window_index]._system->Mass()[idx]/cell_area != 0)
+			// 	mass = std::min(1.0,std::max(0.0,(log10(_dws[window_index]._system->Mass()[idx]/cell_area) - min) / (max-min)));
 			vector<Point> ps = q.Points();
 
-			glColor3f(std::min(1.0,mass*2.0), std::max(0.0,((mass*2.0) - 1.0)), 0);
+			// glColor3f(std::min(1.0,mass*2.0), std::max(0.0,((mass*2.0) - 1.0)), 0);
+			glColor3f(1.0, 0, 0);
 			glVertex2f(2*(ps[0][0]-(mesh_min_v + ((mesh_max_v - mesh_min_v)/2.0)))/(mesh_max_v - mesh_min_v), 2*(ps[0][1]-(mesh_min_h + ((mesh_max_h - mesh_min_h)/2)))/(mesh_max_h - mesh_min_h));
 			glVertex2f(2*(ps[1][0]-(mesh_min_v + ((mesh_max_v - mesh_min_v)/2.0)))/(mesh_max_v - mesh_min_v), 2*(ps[1][1]-(mesh_min_h + ((mesh_max_h - mesh_min_h)/2)))/(mesh_max_h - mesh_min_h));
 			glVertex2f(2*(ps[2][0]-(mesh_min_v + ((mesh_max_v - mesh_min_v)/2.0)))/(mesh_max_v - mesh_min_v), 2*(ps[2][1]-(mesh_min_h + ((mesh_max_h - mesh_min_h)/2)))/(mesh_max_h - mesh_min_h));
 			glVertex2f(2*(ps[3][0]-(mesh_min_v + ((mesh_max_v - mesh_min_v)/2.0)))/(mesh_max_v - mesh_min_v), 2*(ps[3][1]-(mesh_min_h + ((mesh_max_h - mesh_min_h)/2)))/(mesh_max_h - mesh_min_h));
 		}
-	}
+	// }
 
 	glEnd();
 

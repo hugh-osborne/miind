@@ -203,6 +203,23 @@ _cell_width(cell_width)
       _sys._vec_mass[m] = _dydt[m];
  }
 
+ void MasterGrid::ApplyIndividual(double t_step, const vector<double>& rates, vector<double>& efficacy_map, std::vector<unsigned int>& individuals){
+   CalculateWindows(t_step, rates, efficacy_map);
+
+#pragma omp parallel for
+   for(unsigned int i=0; i<individuals.size(); i++){
+ 		double r1 = (rand() % 10000) / 10000.0;
+ 		unsigned int idx = 0;
+ 		double total = 1000 * _mass_window[idx];
+ 		while( total < r1 ){
+      idx++;
+ 			total += 1000 * _mass_window[idx];
+ 		}
+    unsigned int f = (((individuals[i] - (int)(_window_size/2) + (idx-1))%(int)_dydt.size()+(int)_dydt.size()) % (int)_dydt.size());
+ 		individuals[i] = f;
+ 	  }
+ }
+
  void MasterGrid::operator()(const vector<double>& vec_mass, vector<double>& dydt, const double)
 {
   const vector<double>& vec_eff = *_p_vec_eff;

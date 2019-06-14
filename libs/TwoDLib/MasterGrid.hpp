@@ -60,6 +60,8 @@ namespace TwoDLib {
 		void CalculateWindows(double t_step, const vector<double>& rates, vector<double>& efficacy_map);
 		void Convolve(double t_step, const vector<double>& rates, vector<double>& efficacy_map, std::unordered_set<unsigned int>& cell_indices);
 
+		void ApplyIndividual(double t_step, const vector<double>& rates, vector<double>& efficacy_map, std::vector<unsigned int>& individuals);
+
 		void Apply(double t_step, const vector<double>& rates, vector<double>& efficacy_map);
 
 		void operator()(const vector<double>&, vector<double>&, const double t = 0);

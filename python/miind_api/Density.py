@@ -188,19 +188,24 @@ class Density(Result):
         if not ext.startswith('.'):
             ext = '.' + ext
 
-        if ax is None:
-            fig, ax = plt.subplots()
+        fig, ax = plt.subplots()
 
         time = get_density_time(fname)
         idx = self.times.index(time)
         md = self.mesh.dimensions()
         poly_coords = list(self.polygons.keys())
-        ax.set_xlim(md[0])
+        ax.set_xlim([-90, md[0][1]])
         ax.set_ylim(md[1])
+        fig.set_size_inches(18, 3)
+        ax.tick_params(axis='both',which='both',left=False,bottom=True,labelbottom=True,labelleft=False,labelsize=20)
+        ax.spines["top"].set_visible(False)
+        ax.spines["right"].set_visible(False)
+        ax.spines["left"].set_visible(False)
         #aspect = (md[0][1] - md[0][0]) / (md[1][1] - md[1][0])
         #ax.set_aspect(aspect)
         ax.set_aspect('auto')
-        p = PatchCollection(self.patches, cmap=cmap)
+        p = PatchCollection(self.patches, cmap='gist_heat')
+        # p = PatchCollection(self.patches, cmap='gist_heat')
         density, coords = read_density(fname)
         sort_idx = sorted(range(len(coords)), key=coords.__getitem__)
         coords = [coords[i] for i in sort_idx]
@@ -210,8 +215,9 @@ class Density(Result):
         p.set_array(scaled_density)
         ax.add_collection(p)
 
-        if colorbar is not None:
-            plt.colorbar(p)
+        cbar = plt.colorbar(p)
+        cbar.ax.tick_params(labelsize=20)
+        cbar.set_label('Probability Density',size=20)
 
         if save:
             if not op.exists(self.path):
