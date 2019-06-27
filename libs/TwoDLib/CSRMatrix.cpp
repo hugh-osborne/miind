@@ -180,9 +180,12 @@ void CSRMatrix::MVIndexed(vector<double>& out, const vector<double>& in, std::un
 void CSRMatrix::MVIndividual(std::vector<unsigned int>& individuals){
 #pragma omp parallel for
 	for(unsigned int i=0; i<individuals.size(); i++){
-		double r1 = (rand() % 1000) / 1000.0;
+		double r1 = ((double)rand()/(double)RAND_MAX);
 		unsigned int idx = 0;
 		double total = _mat_vals[individuals[i]][idx];
+		// This isn't optimal: O(N) : we could do a binary search to make it
+		// O(logN). Unforunately, precomuting doesn't make sense here as each
+		// cell (mostly) has a different _mat_vals/_vec_mat so no O(1) for us :(
 		while( total < r1 ){
 			idx++;
 			total += _mat_vals[individuals[i]][idx];

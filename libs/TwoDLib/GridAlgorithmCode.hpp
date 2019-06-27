@@ -224,8 +224,8 @@ namespace TwoDLib {
 				 for(unsigned int id = 0; id < _mass_swap.size(); id++)
 					  _mass_swap[id] = 0.;
 
-			 	// _csr_transform->MV(_mass_swap,_sys._vec_mass);
-				_csr_transform->MVIndividual(_sys._individuals);
+			 	_csr_transform->MV(_mass_swap,_sys._vec_mass);
+				// _csr_transform->MVIndividual(_sys._individuals);
 				// _csr_transform->MVIndexed(_mass_swap,_sys._vec_mass,_cell_indices);
 
 				_sys._vec_mass = _mass_swap;
@@ -235,6 +235,7 @@ namespace TwoDLib {
 			// we can guarantee there's no mass above threshold when running
 			// MVGrid in MasterGrid
 			_sys.RedistributeProbability(_n_steps);
+			// _sys.RedistributeIndividual(350, 150, 30, _n_steps);
 
 			std::vector<std::vector<MPILib::Rate>> vec_rates;
 			for(unsigned int i=0; i<_vec_vec_delay_queues.size(); i++){
@@ -255,8 +256,9 @@ namespace TwoDLib {
 	}
 
 	void GridAlgorithm::applyMasterSolver(std::vector<MPILib::Rate> rates) {
-			// _p_master->Apply(_n_steps*_dt,rates,_efficacy_map);
-			_p_master->ApplyIndividual(_n_steps*_dt,rates,_efficacy_map, _sys._individuals);
+			_p_master->Apply(_n_steps*_dt,rates,_efficacy_map);
+			// _p_master->ApplyIndividual(_n_steps*_dt,rates,_efficacy_map, _sys._individuals);
+			// _p_master->ApplyIndividualPoisson(_n_steps*_dt,rates,_efficacy_map, _sys._individuals);
 			// _p_master->Convolve(_n_steps*_dt,rates,_efficacy_map,_cell_indices);
 	}
 

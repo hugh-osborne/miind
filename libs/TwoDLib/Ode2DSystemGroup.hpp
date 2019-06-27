@@ -102,7 +102,7 @@ namespace TwoDLib {
 
 		void RedistributeProbability(MPILib::Number);
 
-		void RedistributeIndividual(std::vector<unsigned int>& individuals, MPILib::Number steps);
+		void RedistributeIndividual(unsigned int threshold, unsigned int reset, unsigned int w_reset, MPILib::Number steps);
 
 		//! Return the instantaneous firing rate
 		const vector<MPILib::Rate>& F() const {return _fs;}

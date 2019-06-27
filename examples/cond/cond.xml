@@ -6,7 +6,7 @@
 <MatrixFile>cond_0_0.05_0.mat</MatrixFile>
 </Algorithm>
 <Algorithm type="RateFunctor" name="ExcitatoryInput">
-<expression>1000.</expression>
+<expression>500.</expression>
 </Algorithm>
 </Algorithms>
 <Nodes>

@@ -28,8 +28,8 @@
 <Connection In="D" Out="S" type="SomaDendrite" num_connections="1000" efficacy="1.0" delay="0.0" conductance="0.5"/>
 </Connections>
 <Reporting>
-	<!--<Density node="RG_E" t_start="0.0" t_end="6.0" t_interval="0.001" />
-	<Density node="RG_F" t_start="0.0" t_end="6.0" t_interval="0.001" />-->
+	<Density node="S" t_start="0.0" t_end="6.0" t_interval="0.001" />
+	<Density node="D" t_start="0.0" t_end="6.0" t_interval="0.001" />
 	<Display node="S" />
 	<Display node="D" />
 	<Rate node="S" t_interval="0.0001" />

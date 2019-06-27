@@ -20,6 +20,7 @@
 #endif
 #include <algorithm>
 #include <numeric>
+#include <random>
 
 #include "MasterGrid.hpp"
 
@@ -133,7 +134,7 @@ _cell_width(cell_width)
      _dydt_window[id] = 0.;
    }
 
-   _mass_window[(int)(_window_size/2)] = 0.001;
+   _mass_window[(int)(_window_size/2)+1] = 0.001;
 
 	 typedef boost::numeric::odeint::runge_kutta_cash_karp54< vector<double> > error_stepper_type;
 	 typedef boost::numeric::odeint::controlled_runge_kutta< error_stepper_type > controlled_stepper_type;
@@ -208,9 +209,12 @@ _cell_width(cell_width)
 
 #pragma omp parallel for
    for(unsigned int i=0; i<individuals.size(); i++){
- 		double r1 = (rand() % 10000) / 10000.0;
+ 		double r1 = ((double)rand()/(double)RAND_MAX);
  		unsigned int idx = 0;
  		double total = 1000 * _mass_window[idx];
+    // This is not optimal : O(N). Use binary search to reduce to O(logN).
+    // However, can also just generate poisson spikes instead of relying on
+    // the master process!
  		while( total < r1 ){
       idx++;
  			total += 1000 * _mass_window[idx];
@@ -218,6 +222,22 @@ _cell_width(cell_width)
     unsigned int f = (((individuals[i] - (int)(_window_size/2) + (idx-1))%(int)_dydt.size()+(int)_dydt.size()) % (int)_dydt.size());
  		individuals[i] = f;
  	  }
+ }
+
+ void MasterGrid::ApplyIndividualPoisson(double t_step, const vector<double>& rates, vector<double>& efficacy_map, std::vector<unsigned int>& individuals) {
+   static std::random_device rd;
+   static std::mt19937 gen(rd());
+
+   for(int r=0; r<rates.size(); r++){
+     std::poisson_distribution<int> pd(rates[r]*t_step);
+#pragma omp parallel for
+       for(unsigned int i=0; i<individuals.size(); i++){
+         double r1 =  pd(gen) * efficacy_map[r];
+     		 int offset = (int)(r1 / _cell_width);
+         unsigned int f = (((individuals[i] + offset)%(int)_dydt.size()+(int)_dydt.size()) % (int)_dydt.size());
+     		 individuals[i] = f;
+     	}
+   }
  }
 
  void MasterGrid::operator()(const vector<double>& vec_mass, vector<double>& dydt, const double)

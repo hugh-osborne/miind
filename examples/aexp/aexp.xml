@@ -1,7 +1,7 @@
 <Simulation>
 <WeightType>DelayedConnection</WeightType>
 <Algorithms>
-<Algorithm type="MeshAlgorithm" name="ALG_ADEX" modelfile="aexp.model" >
+<Algorithm type="MeshAlgorithmGroup" name="ALG_ADEX" modelfile="aexp.model" >
 <TimeStep>0.00001</TimeStep>
 <!--<MatrixFile>aexp_-1_0_0.mat</MatrixFile>-->
 <MatrixFile>aexp_1_0_0.mat</MatrixFile>

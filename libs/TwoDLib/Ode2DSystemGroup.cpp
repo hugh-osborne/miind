@@ -422,18 +422,21 @@ void Ode2DSystemGroup::RedistributeProbability()
 	RedistributeProbability(1);
 }
 
-void Ode2DSystemGroup::RedistributeIndividual(std::vector<unsigned int>& individuals, MPILib::Number steps){
-	// for(unsigned int i : individuals){
-	//  double r1 = (rand() % 10000) / 10000.0;
-	//  unsigned int idx = 0;
-	//  double total = 0.0;
-	//  while( total < r1 ){
-	// 	 total += 1000 * _mass_window[idx];
-	// 	 idx++;
-	//  }
-	//  unsigned int f = (((i - (int)(_window_size/2) + idx)%(int)_dydt.size()+(int)_dydt.size()) % (int)_dydt.size());
-	//  individuals[i] = f;
-	//  }
+void Ode2DSystemGroup::RedistributeIndividual(unsigned int threshold, unsigned int reset, unsigned int w_reset, MPILib::Number steps){
+	unsigned int reset_count = 0;
+	for(unsigned int i=0; i<_individuals.size(); i++){
+		Coordinates c = _index_to_coords[_individuals[i]];
+		if (c[1] >= threshold){
+			_individuals[i] = Map(0, std::min((int)(c[0] + w_reset), 99), reset);
+			reset_count++;
+			_fs[0] += 1.0 / 10000;
+		}
+	}
+
+	MPILib::Time t_step = _mesh_list[0].TimeStep(); // they all should have the same time step
+ 	for (MPILib::Rate& f: _fs){
+ 		f /= t_step*steps;
+ 	}
 }
 
 const std::vector<MPILib::Potential>& Ode2DSystemGroup::AvgV() const
