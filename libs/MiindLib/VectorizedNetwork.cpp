@@ -80,7 +80,16 @@ void VectorizedNetwork::initOde2DSystem(unsigned int min_solve_steps){
   }
 
   for(MPILib::Index i=0; i < _mesh_meshes.size(); i++){
-    _group->Initialize(_mesh_meshes[i],0,0);
+
+	// default initialization is (0,0); if there is no strip 0, it's down to the user
+	if (_vec_mesh[i].NrCellsInStrip(0) > 0 )
+		_group->Initialize(_mesh_meshes[i],0,0);
+	else
+		for(MPILib::Index istrip = 1; istrip < _vec_mesh[i].NrStrips(); istrip++)
+			if (_vec_mesh[i].NrCellsInStrip(istrip) > 0){
+				_group->Initialize(_mesh_meshes[i],istrip,0);
+				break;
+			}
   }
 
   _master_steps = min_solve_steps;
@@ -95,25 +104,29 @@ void VectorizedNetwork::initOde2DSystem(unsigned int min_solve_steps){
 
 void VectorizedNetwork::reportNodeActivities(MPILib::Time sim_time){
   for (int i=0; i<_rate_nodes.size(); i++){
-    if(std::fabs(std::remainder(sim_time, _rate_intervals[i])) > 0.00000001 )
+    if(sim_time < _rate_current_time[i] + _rate_intervals[i])
       continue;
+    _rate_current_time[i] += _rate_intervals[i];
 		std::ostringstream ost2;
 		ost2 << "rate_" << _rate_nodes[i];
 		std::ofstream ofst_rate(ost2.str(), std::ofstream::app);
 		ofst_rate.precision(10);
-    ofst_rate << sim_time << "\t" << _current_node_rates[_rate_nodes[i]] << std::endl;
+    ofst_rate << _rate_current_time[i] << "\t" << _current_node_rates[_rate_nodes[i]] << std::endl;
 		ofst_rate.close();
 	}
 }
 
 void VectorizedNetwork::reportNodeDensities(MPILib::Time sim_time){
   for (int i=0; i<_density_nodes.size(); i++){
-    if(sim_time < _density_start_times[i] || sim_time > _density_end_times[i] || std::fabs(std::remainder(sim_time, _density_intervals[i])) > 0.00000001 )
+    if(sim_time < _density_start_times[i] || sim_time > _density_end_times[i]
+       || sim_time < _density_current_time[i] + _density_intervals[i])
       continue;
 
+    _density_current_time[i] +=  _density_intervals[i];
     std::ostringstream ost;
-    ost << _density_nodes[i]  << "_" << sim_time;
-    string fn("node_" + ost.str());
+    ost << _density_nodes[i]  << "_" << _density_current_time[i] << "_"
+    <<  _group->P() + _group_adapter->sumRefractory();
+    string fn("density_node_" + ost.str());
 
     std::string model_path("densities");
     boost::filesystem::path path(model_path);
@@ -224,7 +237,7 @@ void VectorizedNetwork::setupLoop(bool write_displays){
     // for each connection, which of group's meshes is being affected
     _connection_out_group_mesh.push_back(_node_id_to_group_mesh[_mesh_custom_connections[i]._out]);
 
-    _csrs.push_back(TwoDLib::CSRMatrix(*(_mesh_custom_connections[i]._transition), *(_group), _node_id_to_group_mesh[_mesh_connections[i]._out]));
+    _csrs.push_back(TwoDLib::CSRMatrix(*(_mesh_custom_connections[i]._transition), *(_group), _node_id_to_group_mesh[_mesh_custom_connections[i]._out]));
     // _csrs contains all the grid transforms first (see initOde2DSystem)
     // now we're adding all the mesh transition matrices so set the correct index value
     _mesh_transform_indexes.push_back(_grid_meshes.size()+i);
@@ -284,7 +297,6 @@ std::vector<double> VectorizedNetwork::singleStep(std::vector<double> activities
     connection_count++;
   }
 
-
   for (MPILib::Index i_part = 0; i_part < _n_steps; i_part++ ){
     _group_adapter->Evolve(_mesh_meshes);
     _group_adapter->RemapReversal();
@@ -313,6 +325,7 @@ std::vector<double> VectorizedNetwork::singleStep(std::vector<double> activities
     for(unsigned int j=0; j<_node_to_connection_queue[_group_mesh_to_node_id[i]].size(); j++){
       _connection_queue[_node_to_connection_queue[_group_mesh_to_node_id[i]][j]].updateQueue(group_rates[i]);
     }
+
   }
 
   std::vector<double> monitored_rates(_monitored_nodes.size());
@@ -327,6 +340,7 @@ std::vector<double> VectorizedNetwork::singleStep(std::vector<double> activities
 
   if(_density_nodes.size() > 0){
     _group_adapter->updateGroupMass();
+    _group_adapter->updateRefractory();
     reportNodeDensities(time);
   }
 

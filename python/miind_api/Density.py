@@ -177,7 +177,7 @@ class Density(Result):
         for fname in self.fnames:
             path, filename = op.split(fname)
             tokens = filename.split('_')
-            if float(tokens[2]) == float(time):
+            if float(tokens[3]) == float(time):
                 return fname
         return None
 
@@ -233,3 +233,8 @@ class Density(Result):
                 '{}'.format(time)).replace('.', '-')
             plt.gcf().savefig(figname + ext, res=image_size, bbox_inches='tight')
             plt.close(plt.gcf())
+
+    # find all times for which a density file was generated
+    def findDensityTimes(self):
+        ts=[ float(os.path.split(name)[-1].split('_')[3]) for name in self.fnames]
+        return ts

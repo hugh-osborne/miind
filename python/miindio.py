@@ -15,8 +15,10 @@ import directories3
 
 cwdfilename = 'miind_cwd'
 settingsfilename = op.expanduser('~/.miind_settings')
-miind_cmake_cache = op.join(directories3.miind_root(), 'build/CMakeCache.txt')
+available_settingsfilename = os.path.join(directories3.miind_root(),'python','miind_settings')
 debug = False
+settings = {}
+available_settings = {}
 
 def getMiindPythonPath():
     return os.path.join(directories3.miind_root(), 'python')
@@ -41,7 +43,7 @@ def _help(command):
         print('')
         print('sim                      : Set the current simulation from an xml file or generate a new xml file.')
         print('models                   : List all model files used by the current simulation.')
-        print('settings                 : Set certain persistent parameters to match your MIIND installation (ENABLE MPI, OPENMP, ROOT).')
+        print('settings                 : Set certain persistent parameters to match your MIIND installation (ENABLE ROOT, CUDA).')
         print('submit                   : Generate and build (make) the code from the current simulation.')
         print('run                      : Run the current submitted simulation.')
         print('submit-python            : Generate and build (make) a shared library for use with python from the current simulation.')
@@ -61,7 +63,8 @@ def _help(command):
         print('generate-matrix          : Generate a matrix file from existing model and fid files.')
         print('regenerate-reset         : Regenerate the reset mapping for an existing model.')
         print('lost                     : Open the fiducial tool for capturing lost points.')
-        print('generate-lif-mesh        : Example to illustrate a mesh generation script to build a LIF neuron mesh.')
+        print('generate-lif-mesh        : Helper command to build a LIF neuron mesh.')
+        print('generate-qif-mesh        : Helper command to build a QIF neuron mesh.')
         print('draw-mesh                : Draw the mesh described in an existing .mesh file.')
         print('')
 
@@ -159,21 +162,35 @@ def _settings(command):
                 print( k + ' = ' + str(v))
 
         if len(command) > 1:
-            if len(command) != 5:
-                print ("settings command expects [ENABLE_MPI] [ENABLE_OPENMP] [ENABLE_ROOT] [ENABLE_CUDA].")
+            if len(command) != 3:
+                print ("settings command expects [ENABLE_ROOT] [ENABLE_CUDA].")
             else:
-                settings['mpi_enabled'] = (command[1] in ['True', 'true', 'TRUE'])
-                settings['openmp_enabled'] = (command[2] in ['True', 'true', 'TRUE'])
-                settings['root_enabled'] = (command[3] in ['True', 'true', 'TRUE'])
-                settings['cuda_enabled'] = (command[4] in ['True', 'true', 'TRUE'])
+                if (command[1] in ['True', 'true', 'TRUE', 'ON', 'on']):
+                    if available_settings['root_enabled']:
+                        settings['root_enabled'] = True
+                    else:
+                        print('ROOT was not enabled in the MIIND installation and cannot be set.')
+                else:
+                    settings['root_enabled'] = False
+
+                if (command[2] in ['True', 'true', 'TRUE', 'ON', 'on']):
+                    if available_settings['cuda_enabled']:
+                        settings['cuda_enabled'] = True
+                    else:
+                        print('CUDA was not enabled in the MIIND installation and cannot be set.')
+                else:
+                    settings['cuda_enabled'] = False
 
                 with open(settingsfilename, 'w') as settingsfile:
                     for k,v in settings.items():
-                        settingsfile.write(k + '=' + str(v) + '\n')
+                        if v:
+                            settingsfile.write(k + '=ON\n')
+                        else:
+                            settingsfile.write(k + '=OFF\n')
 
     if command_name in [name+'?', name+' ?', name+' -h', name+' -?', name+' help', 'man '+name]:
         print (name + ' : List the current settings. Settings are stored in \'.miind_settings\' in your home (~/) directory.')
-        print (name + ' [ENABLE_MPI] [ENABLE_OPENMP] [ENABLE_ROOT] [ENABLE_CUDA]: Expects \'True\' or \'False\' for each of the three settings. Settings are persistent.')
+        print (name + ' [ENABLE_ROOT] [ENABLE_CUDA]: Expects \'True\' or \'False\' for each of the settings. Settings are persistent.')
 
 
 def submit(command, current_sim):
@@ -186,13 +203,13 @@ def submit(command, current_sim):
 
         if len(command) == 1:
             current_sim.submit(True, [],
-                  settings['mpi_enabled'], settings['openmp_enabled'], settings['root_enabled'], settings['cuda_enabled'])
+                  available_settings['mpi_enabled'], available_settings['openmp_enabled'], settings['root_enabled'], settings['cuda_enabled'])
         if len(command) == 2:
             current_sim.submit(True, glob.glob(command[1]),
-                  settings['mpi_enabled'], settings['openmp_enabled'], settings['root_enabled'], settings['cuda_enabled'])
+                  available_settings['mpi_enabled'], available_settings['openmp_enabled'], settings['root_enabled'], settings['cuda_enabled'])
         if len(command) >= 3:
             current_sim.submit(True, command[1:],
-                  settings['mpi_enabled'], settings['openmp_enabled'], settings['root_enabled'], settings['cuda_enabled'])
+                  available_settings['mpi_enabled'], available_settings['openmp_enabled'], settings['root_enabled'], settings['cuda_enabled'])
 
     if command_name in [name+'?', name+' ?', name+' -h', name+' -?', name+' help', 'man '+name]:
         print (name + ' : Generate and \'make\' the code from the current simulation xml file. Ensure you have the correct settings (call \'settings\').')
@@ -227,13 +244,13 @@ def buildSharedLib(command, current_sim):
 
         if len(command) == 1:
             current_sim.submit_shared_lib(True, [],
-                  settings['mpi_enabled'], settings['openmp_enabled'], settings['root_enabled'], settings['cuda_enabled'])
+                  available_settings['mpi_enabled'], available_settings['openmp_enabled'], settings['root_enabled'], settings['cuda_enabled'])
         if len(command) == 2:
             current_sim.submit_shared_lib(True, glob.glob(command[1]),
-                  settings['mpi_enabled'], settings['openmp_enabled'], settings['root_enabled'], settings['cuda_enabled'])
+                  available_settings['mpi_enabled'], available_settings['openmp_enabled'], settings['root_enabled'], settings['cuda_enabled'])
         if len(command) >= 3:
             current_sim.submit(True, command[1:],
-                  settings['mpi_enabled'], settings['openmp_enabled'], settings['root_enabled'], settings['cuda_enabled'])
+                  available_settings['mpi_enabled'], available_settings['openmp_enabled'], settings['root_enabled'], settings['cuda_enabled'])
 
     if command_name in [name+'?', name+' ?', name+' -h', name+' -?', name+' help', 'man '+name]:
         print (name + ' : Generate and \'make\' a shared library for use with python from the current simulation xml file. Ensure you have the correct settings (call \'settings\').')
@@ -351,16 +368,16 @@ def plotMarginals(command, current_sim):
         if len(command) == 3:
             current_marginal = current_sim.getMarginalByNodeName(command[1])
             fig, axis = plt.subplots(1,2)
-            current_marginal.plotV(float(command[2]), axis[0])
-            current_marginal.plotW(float(command[2]), axis[1])
+            current_marginal.plotV(command[2], axis[0])
+            current_marginal.plotW(command[2], axis[1])
             plt.show(block=False)
         elif len(command) == 5:
             current_marginal = current_sim.getMarginalByNodeName(command[1])
             current_marginal.vn = int(command[2])
             current_marginal.wn = int(command[3])
             fig, axis = plt.subplots(1,2)
-            current_marginal.plotV(float(command[4]), axis[0])
-            current_marginal.plotW(float(command[4]), axis[1])
+            current_marginal.plotV(command[4], axis[0])
+            current_marginal.plotW(command[4], axis[1])
             plt.show(block=False)
         else:
             print (name + ' expects two or four parameters.')
@@ -381,12 +398,56 @@ def generateLifMesh(command):
             gen.generateLifMesh()
             gen.generateLifStationary()
             gen.generateLifReversal()
+        elif len(command) == 8:
+            gen = api.LifMeshGenerator(command[1], float(command[2]), float(command[3]), float(command[4]), float(command[5]), float(command[6]), int(command[7]))
+            gen.generateLifMesh()
+            gen.generateLifStationary()
+            gen.generateLifReversal()
         else:
-            print (name + ' expects one parameter.')
+            print (name + ' expects one or seven parameters.')
             generateLifMesh(name+'?')
 
     if command_name in [name+'?', name+' ?', name+' -h', name+' -?', name+' help', 'man '+name]:
         print (name + ' [Basename] : Generate a new Basename.mesh, Basename.stat and Basename.rev file for a Leaky Integrate and Fire Neuron.')
+        print ('Defaults : Time Scale = 10e-3, Threshold Potential = -50.0, Resting Potential = -65.0, Min Potential = -80.0, Time step = 0.0001, Bin Count = 300')
+        print (name + ' [Basename] [Time Scale] [Threshold Potential] [Resting Potential] [Min Potential] [Time step] [Bin Count] : Generate a new Basename.mesh, Basename.stat and Basename.rev file for a Leaky Integrate and Fire Neuron.')
+
+def generateQifMesh(command):
+    command_name = command[0]
+    name = 'generate-qif-mesh'
+
+    if command_name in [name]:
+        if len(command) == 2:
+            gen = api.QifMeshGenerator(command[1])
+            gen.generateQifMesh()
+            gen.generateQifStationary()
+            gen.generateQifReversal()
+        elif len(command) == 3:
+            if (float(command[2]) == 0.0):
+                print ('An I value of 0.0 is not allowed for this mesh. Use a very small epsilon if no current is required.')
+            else:
+                gen = api.QifMeshGenerator(command[1], I=float(command[2]))
+                gen.generateQifMesh()
+                gen.generateQifStationary()
+                gen.generateQifReversal()
+        elif len(command) == 7:
+            if (float(command[6]) == 0.0):
+                print ('An I value of 0.0 is not allowed for this mesh. Use a very small epsilon if no current is required.')
+            else:
+                gen = api.QifMeshGenerator(command[1], float(command[2]), float(command[3]), float(command[4]), float(command[5]), float(command[6]))
+                gen.generateQifMesh()
+                gen.generateQifStationary()
+                gen.generateQifReversal()
+        else:
+            print (name + ' expects one, two or six parameters.')
+            generateLifMesh(name+'?')
+
+    if command_name in [name+'?', name+' ?', name+' -h', name+' -?', name+' help', 'man '+name]:
+        print (name + ' [Basename] : Generate a new Basename.mesh, Basename.stat and Basename.rev file for a Quadratic Integrate and Fire Neuron (with constant input current I=1.0).')
+        print (name + ' [Basename] : Generate a new Basename.mesh, Basename.stat and Basename.rev file for a Quadratic Integrate and Fire Neuron (with constant input current I=-1.0).')
+        print ('Defaults : Time Scale = 10e-3, Min Potential = -10.0, Max Potential = 10.0, Time step = 0.0001')
+        print (name + ' [Basename] [Time Scale] [Min Potential] [Max Potential] [Time step] [I (Non-zero Current)] : Generate a new Basename.mesh, Basename.stat and Basename.rev file for a Quadratic Integrate and Fire Neuron.')
+
 
 def generateModel(command):
     command_name = command[0]
@@ -557,6 +618,8 @@ def checkCommands(command, current_sim):
 
     generateLifMesh(command)
 
+    generateQifMesh(command)
+
     generateModel(command)
 
     generateEmptyFid(command)
@@ -577,50 +640,70 @@ def checkCommands(command, current_sim):
 
 if __name__ == "__main__":
 
-  settings = {}
-  settings['mpi_enabled'] = True
-  settings['openmp_enabled'] = True
-  settings['root_enabled'] = False # default is root switched off
-  settings['cuda_enabled'] = True
+  available_settings['mpi_enabled'] = False
+  available_settings['openmp_enabled'] = False
+  available_settings['root_enabled'] = False
+  available_settings['cuda_enabled'] = False
+
+  settings['root_enabled'] = False
+  settings['cuda_enabled'] = False
 
   cwd_settings = {}
   cwd_settings['sim'] = 'NOT_SET'
   cwd_settings['sim_project'] = 'NOT_SET'
 
-  flags_set = [False,False,False,False]
-  if op.exists(miind_cmake_cache):
-      with open(miind_cmake_cache, 'r') as cachefile:
-          for line in cachefile:
-              tokens = line.strip().split('=')
-              if(tokens[0] == 'ENABLE_CUDA:BOOL'):
-                  settings['cuda_enabled'] = (tokens[1] == 'ON')
-                  flags_set[0] = True
-              if(tokens[0] == 'ENABLE_MPI:BOOL'):
-                  settings['mpi_enabled'] = (tokens[1] == 'ON')
-                  flags_set[1] = True
-              if(tokens[0] == 'ENABLE_OPENMP:BOOL'):
-                  settings['openmp_enabled'] = (tokens[1] == 'ON')
-                  flags_set[2] = True
-              if(tokens[0] == 'ENABLE_ROOT:BOOL'):
-                  settings['root_enabled'] = (tokens[1] == 'ON')
-                  flags_set[3] = True
+  if op.exists(available_settingsfilename):
+      # Read available settings from MIIND installation.
+      with open(available_settingsfilename, 'r') as settingsfile:
+          for line in settingsfile:
+              tokens = line.split('=')
+              available_settings[tokens[0].strip()] = (tokens[1].strip() == 'ON')
 
-  if(not op.exists(miind_cmake_cache) or not all(flags_set)):
+      # Read or create settings as long as they're available in the installation.
       if not op.exists(settingsfilename):
-          print('CMakeCache.txt in MIIND_ROOT/Build directory not found. Fall back to user settings file...')
-          print('Settings file ('+ settingsfilename +') not found. MPI, OPENMP and CUDA enabled by default. ROOT disabled.')
+          print('Settings file ('+ settingsfilename +') created. Using defaults from MIIND installation:')
+          print('ROOT ENABLED = ' + str(available_settings['root_enabled']) + '')
+          print('CUDA ENABLED = ' + str(available_settings['cuda_enabled']) + '\n')
+
+          settings['root_enabled'] = available_settings['root_enabled']
+          settings['cuda_enabled'] = available_settings['cuda_enabled']
+
           with open(settingsfilename, 'w') as settingsfile:
-              settings['mpi_enabled'] = True
-              settings['openmp_enabled'] = True
-              settings['root_enabled'] = False
-              settings['cuda_enabled'] = True
               for k,v in settings.items():
-                  settingsfile.write(k + '=' + str(v) + '\n')
+                  if v:
+                      settingsfile.write(k + '=ON\n')
+                  else:
+                      settingsfile.write(k + '=OFF\n')
       else:
           with open(settingsfilename, 'r') as settingsfile:
               for line in settingsfile:
                   tokens = line.split('=')
-                  settings[tokens[0].strip()] = (tokens[1].strip() == 'True')
+                  settings[tokens[0].strip()] = (tokens[1].strip() == 'ON')
+
+          # Verify settings.
+          settings['root_enabled'] = available_settings['root_enabled'] and settings['root_enabled']
+          settings['cuda_enabled'] = available_settings['cuda_enabled'] and settings['cuda_enabled']
+  else:
+      print('WARNING : MIIND installation is missing the available settings file ' +  + '. All settings switched OFF.')
+
+      # Read or create settings as long as they're available in the installation.
+      if not op.exists(settingsfilename):
+          print('Settings file ('+ settingsfilename +') created. All settings disabled.\n')
+          settings['root_enabled'] = False
+          settings['cuda_enabled'] = False
+
+          with open(settingsfilename, 'w') as settingsfile:
+              for k,v in settings.items():
+                  if v:
+                      settingsfile.write(k + '=ON\n')
+                  else:
+                      settingsfile.write(k + '=OFF\n')
+
+      else:
+          with open(settingsfilename, 'r') as settingsfile:
+              for line in settingsfile:
+                  tokens = line.split('=')
+                  settings[tokens[0].strip()] = (tokens[1].strip() == 'ON')
 
   if not op.exists(cwdfilename):
       with open(cwdfilename, 'w') as cwdsettingsfile:

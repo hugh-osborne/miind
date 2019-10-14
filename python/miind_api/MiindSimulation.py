@@ -199,24 +199,22 @@ class MiindSimulation:
                     return index
         return None
 
-    def plotRate(self, node, ax=None):
+    def plotRate(self, node, ax=None, showplot = True):
         node_index = self.getIndexFromNode(node)
-        if not ax:
-            fig, ax = plt.subplots()
-            fig.set_size_inches(18, 6)
-            fig.subplots_adjust(bottom=0.2)
-            plt.title(node, size=20)
+        rate_length = min(len(self.rates['times']), len(self.rates[node_index]))
 
-            rate_length = min(len(self.rates['times']), len(self.rates[node_index]))
-            ax.plot(self.rates['times'][0:rate_length], self.rates[node_index][0:rate_length], linewidth=4)
-            ax.tick_params(labelsize=18)
-            plt.xlabel('Time (s)', size=20)
-            plt.ylabel('Average Firing Rate (Hz)', size=20)
-            ax.set_xlim([0, 21])
-            ax.set_ylim([0, 150])
-            fig.show()
-        else:
-            ax.plot(self.rates['times'][0:rate_length], self.rates[node_index][0:rate_length])
+        ts = self.rates['times'][0:rate_length]
+        fs = self.rates[node_index][0:rate_length]
+        if showplot:
+            if not ax:
+                fig, ax = plt.subplots()
+                plt.title(node)
+
+                ax.plot(ts , fs)
+                fig.show()
+            else:
+                ax.plot(ts , fs)
+        return ts, fs
 
     # Check if this particular simulation has been run previously
     @property

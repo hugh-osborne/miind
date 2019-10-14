@@ -112,9 +112,16 @@ namespace TwoDLib {
 	_sysfunction(rate_method == "AvgV" ? &TwoDLib::Ode2DSystemGroup::AvgV : &TwoDLib::Ode2DSystemGroup::F)
 	// master parameter can only be calculated on configuration
 	{
+
 		// default initialization is (0,0); if there is no strip 0, it's down to the user
 		if (_mesh_vec[0].NrCellsInStrip(0) > 0 )
 			_sys.Initialize(0,0,0);
+		else
+			for(MPILib::Index i = 1; i < _mesh_vec[0].NrStrips(); i++)
+				if (_mesh_vec[0].NrCellsInStrip(i) > 0){
+					_sys.Initialize(0,i,0);
+					break;
+				}
 	}
 
 	template <class Solver>
@@ -236,12 +243,12 @@ namespace TwoDLib {
 	}
 
 	template <class Solver>
-	void MeshAlgorithmCustom<Solver>::reportDensity() const
+	void MeshAlgorithmCustom<Solver>::reportDensity(MPILib::Time t) const
 	{
 		std::ostringstream ost;
-		ost << _node_id  << "_" << _t_cur;
+		ost << _node_id  << "_" << t;
 		ost << "_" << _sys.P();
-		string fn("mesh_" + ost.str());
+		string fn("density_mesh_" + ost.str());
 
 		std::string model_path = _model_name;
 		boost::filesystem::path path(model_path);

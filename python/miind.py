@@ -120,10 +120,14 @@ def generate_model_files(fn, nodes,algorithms):
      with open(fn,'a') as f:
          node_id = 0
          for node in nodes:
+              algorithm = None
               algname = node.attrib['algorithm']
               for alg in algorithms:
                    if alg.attrib['name'] == algname: # here we assume the name is unique
                         algorithm = alg
+
+              if not algorithm:
+                  raise Exception('No algorithm named \'' + algname + '\' for node \'' + node.attrib['name'] + '\'')
 
               if algorithm.attrib['type'] == 'MeshAlgorithmGroup':
                   ref = 0.0
@@ -175,7 +179,7 @@ def extract_efficacy(fn):
                     raise ValueError('Expected at least one non-zero value')
                return nrs[0]
 
-def construct_CSR_map(nodes,algorithms,connections):
+def construct_CSR_map(nodes,algorithms,connections, connection_type):
      '''Creates a list that corresponds one-to-one with the connection structure. Returns a tuple: [0] node name of receiving node,[1] matrix file name for this connection  '''
      csrlist=[]
      combi = []
@@ -190,7 +194,11 @@ def construct_CSR_map(nodes,algorithms,connections):
 
                                    mfs=algorithm.findall('MatrixFile')
                                    mfn= [ mf.text for mf in mfs]
-                                   efficacy=float(connection.text.split()[1])
+                                   efficacy = None
+                                   if connection_type == "DelayedConnection":
+                                       efficacy=float(connection.text.split()[1])
+                                   elif connection_type == "CustomConnectionParameters":
+                                       efficacy=float(connection.attrib['efficacy'])
                                    effs= [extract_efficacy(fn) for fn in mfn]
 
                                    candidates=[]
@@ -231,7 +239,7 @@ def node_name_to_node_id(nodes):
 
 def generate_connections(fn,conns, nodes, algorithms, weighttype):
     grid_cons = construct_grid_connection_map(nodes, algorithms, conns)
-    mesh_cons = construct_CSR_map(nodes, algorithms, conns)
+    mesh_cons = construct_CSR_map(nodes, algorithms, conns, weighttype.text)
     nodemap = node_name_to_node_id(nodes)
 
     with open(fn,'a') as f:
@@ -318,6 +326,8 @@ def generate_vectorized_network_executable(dirname, filename, modname, enable_mp
     fn = filename[0]
     root=parse(fn)
     if mesh_algorithm_group(root) == True:
+        if not enable_cuda:
+            raise Exception('Vectorised mode (for MeshAlgorithmGroup/GridAlgorithmGroup) currently not supported without a CUDA enabled MIIND installation. ')
         # Run the MeshAlgorithm version
         produce_mesh_algorithm_version(dirname, filename, modname, root, enable_mpi, enable_openmp, enable_root, enable_cuda)
     else:
@@ -350,6 +360,8 @@ if __name__ == "__main__":
     fn = filename[0]
     root=parse(fn)
     if mesh_algorithm_group(root) == True:
+        if not enable_cuda:
+            raise Exception('Vectorised mode (for MeshAlgorithmGroup/GridAlgorithmGroup) currently not supported without a CUDA enabled MIIND installation. ')
         # Run the MeshAlgorithm version
         produce_mesh_algorithm_version(dirname, filename, modname, root, vars(args)['cuda'])
     else:

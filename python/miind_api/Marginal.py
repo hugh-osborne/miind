@@ -16,7 +16,7 @@ from .tools import *
 import mesh3 as meshmod
 
 class Marginal(Result):
-    def __init__(self, io, nodename, vn=1000, wn=1000):
+    def __init__(self, io, nodename, vn=500, wn=200):
         super(Marginal, self).__init__(io, nodename)
         self.path = op.join(self.io.output_directory,
                             self.nodename + '_marginal_density')
@@ -34,7 +34,7 @@ class Marginal(Result):
         # If there's no new projection and we've already calculated everything,
         # just return the existing calculated marginals
         if op.exists(self.data_path) and not self.new_projection:
-            load_data = np.load(self.data_path)['data'][()]
+            load_data = np.load(self.data_path,allow_pickle=True)['data'][()]
             if self.modelname in load_data:
                 return load_data[self.modelname]
 
@@ -62,7 +62,7 @@ class Marginal(Result):
 
         # Save 'data' into a compressed file
         if op.exists(self.data_path):
-            other = np.load(self.data_path)['data'][()]
+            other = np.load(self.data_path,allow_pickle=True)['data'][()]
             other.update({self.modelname: data})
             save_data = other
         else:
@@ -153,21 +153,30 @@ class Marginal(Result):
             'N_W': int(self._proj.find('W_limit/N_W').text),
         }
 
-    def plotV(self, time, ax=None):
-        if not ax:
-            fig, ax = plt.subplots()
-            ax.plot(self['bins_v'], self['v'][self['times'].index(time), :])
-            fig.show()
-        else:
-            ax.plot(self['bins_v'], self['v'][self['times'].index(time), :])
+    def plotV(self, time, ax=None, showplot=True):
+        v = self['bins_v']
+        d = self['v'][self['times'].index(time), :]
+        if showplot:
+            if not ax:
+                fig, ax = plt.subplots()
+                ax.plot(v,d)
+                fig.show()
+            else:
+                ax.plot(v,d)
+        return v, d
 
-    def plotW(self, time, ax=None):
-        if not ax:
-            fig, ax = plt.subplots()
-            ax.plot(self['bins_w'], self['w'][self['times'].index(time), :])
-            fig.show()
-        else:
-            ax.plot(self['bins_w'], self['w'][self['times'].index(time), :])
+    def plotW(self, time, ax=None, showplot=True):
+        w = self['bins_w']
+        d = self['w'][self['times'].index(time), :]
+
+        if showplot:
+            if not ax:
+                fig, ax = plt.subplots()
+                ax.plot(w, d)
+                fig.show()
+            else:
+                ax.plot(w, d)
+        return w, d
 
     def generatePlotImages(self, image_size=300):
         if not op.exists(self.path):
@@ -197,7 +206,7 @@ class Marginal(Result):
             # note ffmpeg must be installed
             # example : ffmpeg -r 1000 -f image2 -pattern_type glob -i "*.png" test.mp4
             process = ['ffmpeg',
-                '-r', str(int((1.0 / time_scale) * (len(files) / self.times[-1]))),
+                '-r', str(int((1.0 / time_scale) * (len(files) / float(self.times[-1])))),
                 '-f', 'image2',
                 '-pattern_type', 'glob',
                 '-i', op.join(self.path, '*.png')]

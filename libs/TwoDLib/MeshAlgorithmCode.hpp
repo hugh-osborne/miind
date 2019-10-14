@@ -131,6 +131,10 @@ namespace TwoDLib {
 		// default initialization is (0,0); if there is no strip 0, it's down to the user
 		if (_mesh_vec[0].NrCellsInStrip(0) > 0 )
 			_sys.Initialize(0,0,0);
+		else if (_mesh_vec[0].NrCellsInStrip(1) > 0)
+				_sys.Initialize(0,1,0);
+		else
+			throw TwoDLib::TwoDLibException("There is no way to provide a default density initialization");
 	}
 
 	template <class WeightValue, class Solver>
@@ -157,6 +161,12 @@ namespace TwoDLib {
 		// default initialization is (0,0); if there is no strip 0, it's down to the user
 		if (_mesh_vec[0].NrCellsInStrip(0) > 0 )
 			_sys.Initialize(0,0,0);
+		else
+			for(MPILib::Index i = 1; i < _mesh_vec[0].NrStrips(); i++)
+				if (_mesh_vec[0].NrCellsInStrip(i) > 0){
+					_sys.Initialize(0,i,0);
+					break;
+				}
 	}
 
 	template <class WeightValue, class Solver>
@@ -212,8 +222,10 @@ namespace TwoDLib {
 		// or by the user calling Initialize if there is no strip 0
 
 		double sum = _sys.P();
-		if (sum == 0.)
+		if (sum == 0.){
+			std::cerr << "No mass initialization has taken place. Cannot proceed." << std::endl;
 			throw TwoDLib::TwoDLibException("No initialization of the mass array has taken place. Call Initialize before configure.");
+		}
 	}
 
 	template <class WeightValue, class Solver>
@@ -252,12 +264,12 @@ namespace TwoDLib {
 	}
 
 	template <class WeightValue, class Solver>
-	void MeshAlgorithm<WeightValue,Solver>::reportDensity() const
+	void MeshAlgorithm<WeightValue,Solver>::reportDensity(MPILib::Time t) const
 	{
 		std::ostringstream ost;
-		ost << _node_id  << "_" << _t_cur;
+		ost << _node_id  << "_" << t;
 		ost << "_" << _sys.P();
-		string fn("mesh_" + ost.str());
+		string fn("density_mesh_" + ost.str());
 
 		std::string model_path = _model_name;
 		boost::filesystem::path path(model_path);
