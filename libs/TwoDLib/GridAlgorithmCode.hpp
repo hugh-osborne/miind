@@ -226,7 +226,6 @@ namespace TwoDLib {
 
 			 	_csr_transform->MV(_mass_swap,_sys._vec_mass);
 				// _csr_transform->MVIndividual(_sys._individuals);
-				// _csr_transform->MVIndexed(_mass_swap,_sys._vec_mass,_cell_indices);
 
 				_sys._vec_mass = _mass_swap;
 	    }
@@ -259,7 +258,6 @@ namespace TwoDLib {
 			_p_master->Apply(_n_steps*_dt,rates,_efficacy_map);
 			// _p_master->ApplyIndividual(_n_steps*_dt,rates,_efficacy_map, _sys._individuals);
 			// _p_master->ApplyIndividualPoisson(_n_steps*_dt,rates,_efficacy_map, _sys._individuals);
-			// _p_master->Convolve(_n_steps*_dt,rates,_efficacy_map,_cell_indices);
 	}
 
 	void GridAlgorithm::FillMap(const std::vector<CustomConnectionParameters>& vec_weights)
