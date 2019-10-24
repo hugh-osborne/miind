@@ -7,6 +7,7 @@ from scipy.special import gamma, factorial
 from sympy.combinatorics import Permutation
 from scipy.spatial import ConvexHull
 from scipy.spatial import Delaunay
+import random
 
 import miind_api as api
 
@@ -199,7 +200,7 @@ class Cell:
                 axis.plot(line[0], line[1], line[2], color=col)
 
     def intersectWith(self, other):
-        # vol_eps = 0.000001
+        #vol_eps = 0.000001 # low for 2D
         vol_eps = 0.0000000000001
         simplices = [Simplex(self.num_dimensions, [p.coords for p in s.points], self.triangulator) for s in self.simplices]
         for (d,mn,mx) in other.hyps:
@@ -246,96 +247,14 @@ class Grid:
         self.dimensions.reverse()
         self.resolution = _resolution
         self.resolution.reverse()
+        self.cell_widths = [(self.dimensions[a]/self.resolution[a]) for a in range(self.num_dimensions)]
         self.base = _base
         self.base.reverse()
-        print('Generating the regular and transformed grids...')
-        self.points = self.generate_points([], self.base, self.dimensions, self.resolution)
-        self.points_trans = self.generate_points_trans(_func, _timestep, 0.0001, [], self.base, self.dimensions, self.resolution)
-        self.cells = self.generate_cells([],self.resolution)
-        self.cells_trans = self.generate_cells_trans([],self.resolution)
-
-    def generate_points(self, total, base, dim, res):
-        dh, *dt = dim
-        rh, *rt = res
-
-        if len(dt) == 0:
-            ps = []
-            for d in range(rh+1):
-                ps = ps + [Point((np.array(base) + np.array(total + [d * (dh / rh)])).tolist())]
-            return ps
-
-        ps = []
-        for d in range(rh+1):
-            ps = ps + [self.generate_points(total + [d*(dh/rh)], base, dt, rt)]
-        return ps
-
-    def generate_points_trans(self, func, timestep, tolerance, total, base, dim, res):
-        tspan = np.linspace(0, timestep, 11)
-        dh, *dt = dim
-        rh, *rt = res
-
-        if len(dt) == 0:
-            ps = []
-            for d in range(rh+1):
-                t_1 = odeint(func, (np.array(base) + np.array(total + [d * (dh / rh)])).tolist(), tspan, atol=tolerance, rtol=tolerance)
-                next = t_1[-1]
-                ps = ps + [Point(next)]
-            return ps
-
-        ps = []
-        for d in range(rh+1):
-            ps = ps + [self.generate_points_trans(func, timestep, tolerance, total + [d*(dh/rh)], base, dt, rt)]
-        return ps
+        self.func = _func
 
     def int_to_bin_list(self, i):
         bstring = str(bin(i))
         return [int(a) for a in bstring[2:].zfill(self.num_dimensions)]
-
-    def cell_index_list(self):
-        return [self.int_to_bin_list(a) for a in range(2**self.num_dimensions)]
-
-    def get_cell_indices(self, cell):
-        return [(np.array(a) + np.array(cell)).tolist() for a in self.cell_index_list()]
-
-    def getCellCornerPoint(self, coords):
-        check = self.points
-        for c in coords:
-            check = check[c]
-        return check
-
-    def getCellTransCornerPoint(self, coords):
-        check = self.points_trans
-        for c in coords:
-            check = check[c]
-        return check
-
-    def generate_cells(self, cell, res):
-        rh, *rt = res
-
-        cells = []
-        if len(rt) == 0:
-            for r in range(rh):
-                cells = cells + [Cell(cell + [r], self.num_dimensions, [self.getCellCornerPoint(a) for a in self.get_cell_indices(cell + [r])], self.triangulator)]
-            return cells
-
-        for d in range(rh):
-            cells = cells + [self.generate_cells(cell + [d], rt)]
-
-        return cells
-
-    def generate_cells_trans(self, cell, res):
-        rh, *rt = res
-
-        cells = []
-        if len(rt) == 0:
-            for r in range(rh):
-                cells = cells + [Cell(cell + [r], self.num_dimensions, [self.getCellTransCornerPoint(a) for a in self.get_cell_indices(cell + [r])], self.triangulator)]
-            return cells
-
-        for d in range(rh):
-            cells = cells + [self.generate_cells_trans(cell + [d], rt)]
-
-        return cells
 
     def findCellCoordForPoint(self, point):
         rel_point = (np.array(point.coords) - np.array(self.base)).tolist()
@@ -360,77 +279,116 @@ class Grid:
                     mns[i] = p.coords[i]
         return [self.findCellCoordForPoint(Point(mns)), self.findCellCoordForPoint(Point(mxs))]
 
-    def calculateTransitionForCell(self, tcell, cells, target, cell_range):
-        min_head, *min_tail = cell_range[0]
-        max_head, *max_tail = cell_range[1]
 
-        if len(min_tail) == 0:
-            transitions = []
-            for c in range((max_head - min_head)+1):
-                prop = tcell.intersectWith(cells[min_head + c])
-                # print(target + [c], prop)
-                if prop > 0:
-                    transitions = transitions + [[target + [min_head + c],prop]]
+    def generate_cell_trans(self, cell):
+        tspan = np.linspace(0, self.timestep, 3)
 
-            return transitions
+        ps = []
+        for d in cell.points:
+            t_1 = odeint(self.func, d.coords, tspan, atol=0.0001, rtol=0.0001)
+            next = t_1[-1]
+            ps = ps + [Point(next)]
+        
+        return Cell(cell.grid_coords, self.num_dimensions, ps, self.triangulator)
 
-        transitions = []
-        for c in range((max_head - min_head)+1):
-            transitions = transitions + self.calculateTransitionForCell(tcell, cells[min_head + c], target + [min_head + c], [min_tail, max_tail])
-        return transitions
+    def cell_index_list(self):
+        return [self.int_to_bin_list(a) for a in range(2**self.num_dimensions)]
 
+    def get_cell_indices(self, cell_coords):
+        return [(np.array(a) + np.array(cell_coords)).tolist() for a in self.cell_index_list()]
 
-    def calculateTransitionMatrix(self):
-        cells_to_check = self.flatten([], self.cells_trans)
-        num_cells_to_check = len(cells_to_check)
-        current_cell = 0
-        percent_complete = 0
-        cells_in_ten_percent = num_cells_to_check / 10
-        transitions = []
-        threshold_coord = self.findCellCoordForPoint(Point(np.zeros(self.num_dimensions-1).tolist() + [self.threshold_v]))[-1]
-        for tcell in cells_to_check:
-            current_cell += 1
-            if current_cell % cells_in_ten_percent == 0:
-                percent_complete += 10
-                print(str(percent_complete) + '% complete.')
+    def generate_cell(self, grid_coords):
+        return Cell(grid_coords, self.num_dimensions, [Point([self.base[c] + (indices[c]*self.cell_widths[c]) for c in range(self.num_dimensions)]) for indices in self.get_cell_indices(grid_coords)], self.triangulator)
 
-            tcell_transitions = self.calculateTransitionForCell(tcell, self.cells, [], self.calculateCellRange(tcell))
-            # if there were no transitions, the cell was entirely outside everything
-            if len(tcell_transitions) == 0:
-                tcell_transitions = [[tcell.grid_coords, 1.0]]
+    def generate_cell_range(self, base, cell_range):
+        minh, *mint = cell_range[0]
+        maxh, *maxt = cell_range[1]
 
-            # if cell ends up bove threshold, send it all back to threshold
-            tcell_transitions = [[coord, prop] if coord[-1] <= threshold_coord else [coord[:-1] + [threshold_coord], prop] for [coord, prop] in tcell_transitions ]
-
-            # If there's any mass left over, spread it among
-            # all cells : this is a hacky solution to maintaining mass
-            # at the edge of the grid: the actual behaviour of the mass near the
-            # edge shouldn't matter too much so hopefully we can get away with
-            # this.
-            total_mass = sum([a[1] for a in tcell_transitions])
-            extra_mass_share = (1.0-total_mass) / len(tcell_transitions)
-            transitions = transitions + [[tcell.grid_coords, [[coord, mass + extra_mass_share] for [coord, mass] in tcell_transitions]]]
-        return transitions
-
-    def plotGrid(self):
-        cs = self.flatten([],self.cells)
-        csts = self.flatten([],self.cells_trans)
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
-        for c in cs:
-            c.drawCellInPlot(ax, 'k', [0,1,2], True)
-        for c in csts:
-            c.drawCellInPlot(ax, 'r', [0,1,2])
-        plt.show()
-
-    def flatten(self, cs, cells):
-        # just a single array
-        if len(np.array(cells).shape) == 1:
-            cs = cells
+        cells = []
+        if len(mint) == 0:
+            for c in range(maxh-minh):
+                cells = cells + [self.generate_cell(base + [minh + c])]
         else:
-            for c in cells:
-                cs = cs + self.flatten([], c)
-        return cs
+            for n in range(maxh-minh):
+                cells = cells + self.generate_cell_range(base + [minh + n], [mint, maxt])
+
+        return cells
+        
+    def calculateTransitionForCell(self, tcell, check_cells):
+        transitions = []
+        for c in check_cells:
+            prop = tcell.intersectWith(c)
+            if prop > 0:
+                    transitions = transitions + [[c.grid_coords,prop]]
+
+        return transitions
+
+    def calculateTransitionForCellMc(self, count, tcell):
+        tspan = np.linspace(0, self.timestep, 11)
+
+        targets = {}
+
+        for c in range(count):
+            random_point = np.array([self.base[a] + ((tcell.grid_coords[a]+random.random())*(self.cell_widths[a])) for a in range(self.num_dimensions)])
+            t_1 = odeint(self.func, (random_point).tolist(), tspan, atol=0.0001, rtol=0.0001)
+            target_cell = [int((t_1[-1][a]-self.base[a])/self.cell_widths[a]) for a in range(self.num_dimensions)]
+            seperator = ','
+            target_cell_string = seperator.join([str(a) for a in target_cell])
+            if target_cell_string not in targets:
+                targets[target_cell_string] = 1.0/count
+            else:
+                targets[target_cell_string] += 1.0/count
+
+        transitions = []
+        for k,v in targets.items():
+            k = [int(a) for a in k.split(',')]
+            transitions = transitions + [[k,v]]
+        
+        return transitions
+
+    def calculateTransitionRecurs(self, threshold_coord, base, res, mc = False, count = 10):
+        rh, *rt = res
+
+        transitions = []
+        if len(rt) == 0:
+            print(base + ['*'])
+            for c in range(rh):
+                cell = self.generate_cell(base + [c])
+                t_cell = self.generate_cell_trans(cell)
+                check_cell_range = self.calculateCellRange(t_cell)
+                check_cells = self.generate_cell_range([], check_cell_range)
+
+                if not mc:
+                    tcell_transitions = self.calculateTransitionForCell(t_cell, check_cells)
+                else:
+                    tcell_transitions = self.calculateTransitionForCellMc(count, t_cell)
+
+                # if there were no transitions, the cell was entirely outside everything
+                if len(tcell_transitions) == 0:
+                    tcell_transitions = [[t_cell.grid_coords, 1.0]]
+
+                # if cell ends up bove threshold, send it all back to threshold
+                tcell_transitions = [[coord, prop] if coord[-1] <= threshold_coord else [coord[:-1] + [threshold_coord], prop] for [coord, prop] in tcell_transitions ]
+
+                # If there's any mass left over, spread it among
+                # all cells : this is a hacky solution to maintaining mass
+                # at the edge of the grid: the actual behaviour of the mass near the
+                # edge shouldn't matter too much so hopefully we can get away with
+                # this.
+                total_mass = sum([a[1] for a in tcell_transitions])
+                extra_mass_share = (1.0-total_mass) / len(tcell_transitions)
+                transitions = transitions + [[t_cell.grid_coords, [[coord, mass + extra_mass_share] for [coord, mass] in tcell_transitions]]]
+        else:
+            for c in range(rh):
+                transitions = transitions + self.calculateTransitionRecurs(threshold_coord, base + [c], rt, mc, count)
+
+        return transitions
+
+    def calculateTransitionMatrix(self, mc = False, count = 10):
+
+        threshold_coord = self.findCellCoordForPoint(Point(np.zeros(self.num_dimensions-1).tolist() + [self.threshold_v]))[-1]
+        return self.calculateTransitionRecurs(threshold_coord, [], self.resolution, mc, count)
+
 
 class Triangulator:
     def __init__(self, _num_dimensions):
@@ -555,8 +513,8 @@ class Triangulator:
             #             line = line.transpose()
             #             ax.plot(line[0], line[1], line[2], color='g')
             #
-            # for p in hyps:
-            #     p_red = [element for i, element in enumerate(p.coords) if i in [0,1,2]]
+            # for p in hyps:greater
+            #     p_red = [element for i, elgreaterement in enumerate(p.coords) if i in [0,1,2]]
             #     ax.scatter(p_red[0],p_red[1],p_red[2], color='b')
             #
             #
@@ -591,28 +549,28 @@ class MiindNDFileGenerator:
         self.threshold_v = _threshold_v        
 
     def generateModelFile(self):
-        mapping_string = '<Model>\n'
-        mapping_string += '<Mesh>\n'
-        mapping_string += '<TimeStep>{}</TimeStep>\n'.format(self.grid.timestep*self.timescale)
-        mapping_string += '</Mesh>\n'
-        mapping_string += '<Stationary>\n'
-        mapping_string += '</Stationary>\n'
-        mapping_string += '<Mapping type = "Reversal">\n'
-        mapping_string += '</Mapping>\n'
-        mapping_string += '<threshold>{}</threshold>\n'.format(self.threshold_v)
-        mapping_string += '<V_reset>{}</V_reset>\n'.format(self.reset_v)
-
-        mapping_string  += '<Mapping type="Reset">\n'
-        reset_index = int((self.reset_v - self.grid.base[self.grid.num_dimensions-1]) / (self.grid.dimensions[self.grid.num_dimensions-1] / self.grid.resolution[self.grid.num_dimensions-1]))
-        threshold_index = int((self.threshold_v - self.grid.base[self.grid.num_dimensions-1]) / (self.grid.dimensions[self.grid.num_dimensions-1] / self.grid.resolution[self.grid.num_dimensions-1]))
-
-        mapping_string += self.generateResetMappingRecurs(reset_index, threshold_index, "", self.grid.cells)
-        mapping_string += '</Mapping>\n'
-
-        mapping_string += '</Model>\n'
-
+        print('Generating Model File...')
         with open(self.basename + '.model', 'w') as model_file:
-            model_file.write(mapping_string)
+            model_file.write('<Model>\n')
+            model_file.write('<Mesh>\n')
+            model_file.write('<TimeStep>{}</TimeStep>\n'.format(self.grid.timestep*self.timescale))
+            model_file.write('</Mesh>\n')
+            model_file.write('<Stationary>\n')
+            model_file.write('</Stationary>\n')
+            model_file.write('<Mapping type = "Reversal">\n')
+            model_file.write('</Mapping>\n')
+            model_file.write('<threshold>{}</threshold>\n'.format(self.threshold_v))
+            model_file.write('<V_reset>{}</V_reset>\n'.format(self.reset_v))
+
+            model_file.write('<Mapping type="Reset">\n')
+            reset_index = int((self.reset_v - self.grid.base[self.grid.num_dimensions-1]) / (self.grid.dimensions[self.grid.num_dimensions-1] / self.grid.resolution[self.grid.num_dimensions-1]))
+            threshold_index = int((self.threshold_v - self.grid.base[self.grid.num_dimensions-1]) / (self.grid.dimensions[self.grid.num_dimensions-1] / self.grid.resolution[self.grid.num_dimensions-1]))
+
+            self.generateResetMappingRecurs(reset_index, threshold_index, model_file, [], self.grid.resolution)
+            model_file.write('</Mapping>\n')
+
+            model_file.write('</Model>\n')
+        print('Model File Generated.')
 
     def cell_index_to_coords(self, index):
         coords = []
@@ -642,24 +600,22 @@ class MiindNDFileGenerator:
         index /= self.grid.resolution[-1]
         return (int(index), coords[-1])
 
-    def generateResetMappingRecurs(self, reset_index, threshold_index, map_str, cells):
-        mapping_string = map_str
-        
-        if len(np.array(cells).shape) == 2:
-            for strip_num in range(len(cells)):
-                strip = cells[strip_num]
-                (row_num, cell) = self.coords_to_strip_and_cell(strip[threshold_index].grid_coords)
+    def generateResetMappingRecurs(self, reset_index, threshold_index, model_file, base, resolution):
+        resh, *rest = resolution
 
-                mapping_string += str(row_num) + ',' + str(cell) + '\t' + str(row_num) + ',' + str(reset_index) + '\t' + str(1.0) + '\n'
+        if len(rest) == 1:
+            for strip_num in range(resh):
+                (row_num, cell) = self.coords_to_strip_and_cell(base + [strip_num] + [threshold_index])
+
+                model_file.write(str(row_num) + ',' + str(cell) + '\t' + str(row_num) + ',' + str(reset_index) + '\t' + str(1.0) + '\n')
         else:
-            for cs in cells:
-                mapping_string += self.generateResetMappingRecurs(reset_index, threshold_index, mapping_string, cs)
+            for cs in range(resh):
+                self.generateResetMappingRecurs(reset_index, threshold_index, model_file, base + [cs], rest)
 
-        return mapping_string
-
-    def generateTMatFile(self):
-        transitions = self.grid.calculateTransitionMatrix()
-
+    def generateTMatFile(self, mc = False, count = 10):
+        print('Calculating Transitions...')
+        transitions = self.grid.calculateTransitionMatrix(mc, count)
+        print('Generating TMat File...')
         with open(self.basename + '.tmat', 'w') as tmat_file:
             tmat_file.write('0	0\n')
             for c in transitions:
@@ -785,8 +741,8 @@ class MiindGrid2DFileGenerator:
         with open(self.basename + '.model', 'w') as model_file:
             model_file.write(total_string)
 
-    def generateTMatFile(self):
-        transitions = self.grid.calculateTransitionMatrix()
+    def generateTMatFile(self, mc = False, count = 10):
+        transitions = self.grid.calculateTransitionMatrix(mc, count)
 
         with open(self.basename + '.tmat', 'w') as tmat_file:
             tmat_file.write('0	0\n')
@@ -941,77 +897,78 @@ class MiindGrid2DFileGenerator:
 
 # Alternative 2D Using NDGridGenerator
 
-def rybakPF(y, t):
-    g_nap = 0.1 #mS
-    g_na = 30
-    g_k = 6 # In the paper, this is quoted as g_k = 1 but we get no oscillations with that value
-    # this is the only change that needs to be made to make it all work.
-    E_na = 55 #mV
-    E_k = -80
-    g_l = 0.1 #mS
-    E_l = -64.0 #mV
-    I = 0.0 #
-    I_h = 0
-
-    v = y[1]
-    h_na = ((1 + (np.exp((v + 55)/7)))**(-1)) #0.62
-    h_nap = y[0]
-    m_k = ((1 + (np.exp(-(v + 28)/15)))**(-1))
-
-    I_nap = -g_nap * h_nap * (v - E_na) * ((1 + np.exp(-(v+47.1)/3.1))**-1)
-    I_l = -g_l*(v - E_l)
-    I_na = -g_na * h_na * (v - E_na) * (((1 + np.exp(-(v+35)/7.8))**-1)**3)
-    I_k = -g_k * ((m_k)**4) * (v - E_k)
-
-    v_prime = I_nap + I_na + I_k + I_l + I
-
-    part_1 = ((1 + (np.exp((v + 59)/8)))**(-1)) - h_nap
-    part_2 = (1200/np.cosh((v + 59)/(16)))
-    h_nap_prime = part_1 / part_2
-
-    return [h_nap_prime, v_prime]
-
-g = Grid([-200.0,-0.2], [200.0,1.2], [300,200], rybakPF, -15.0, 0.1)
-n_d_gen = MiindNDFileGenerator(g, 'rybakPF', 0.001, -57.0, -15.0)
-n_d_gen.generateModelFile()
-n_d_gen.generateTMatFile()
-
-# 3D
-
-# def rybak_3d(y, t):
-#     g_nap = 0.25 #mS
+# def rybakPF(y, t):
+#     g_nap = 0.1 #mS
 #     g_na = 30
 #     g_k = 6 # In the paper, this is quoted as g_k = 1 but we get no oscillations with that value
 #     # this is the only change that needs to be made to make it all work.
 #     E_na = 55 #mV
 #     E_k = -80
-#     C = 1 #uF
 #     g_l = 0.1 #mS
 #     E_l = -64.0 #mV
-#     I = 0.15 #
+#     I = 0.0 #
 #     I_h = 0
 
-#     v = y[2]
-#     h_na = y[1] #0.65
-#     m_k = y[0]
+#     v = y[1]
+#     h_na = ((1 + (np.exp((v + 55)/7)))**(-1)) #0.62
+#     h_nap = y[0]
+#     m_k = ((1 + (np.exp(-(v + 28)/15)))**(-1))
 
+#     I_nap = -g_nap * h_nap * (v - E_na) * ((1 + np.exp(-(v+47.1)/3.1))**-1)
 #     I_l = -g_l*(v - E_l)
 #     I_na = -g_na * h_na * (v - E_na) * (((1 + np.exp(-(v+35)/7.8))**-1)**3)
 #     I_k = -g_k * ((m_k)**4) * (v - E_k)
 
-#     v_prime = I_na + I_k + I_l + I
+#     v_prime = I_nap + I_na + I_k + I_l + I
 
-#     part_1 = ((1 + (np.exp((v + 55)/7)))**(-1)) - h_na
-#     part_2 = 30 / (np.exp((v+50)/15) + np.exp(-(v+50)/16))
-#     h_na_prime = part_1 / part_2
+#     part_1 = ((1 + (np.exp((v + 59)/8)))**(-1)) - h_nap
+#     part_2 = (1200/np.cosh((v + 59)/(16)))
+#     h_nap_prime = part_1 / part_2
 
-#     part_1 = ((1 + (np.exp(-(v + 28)/15)))**(-1)) - m_k
-#     part_2 = 7 / (np.exp((v+40)/40) + np.exp((-v + 40)/50))
-#     m_k_prime = part_1 / part_2
+#     return [h_nap_prime, v_prime]
 
-#     return [m_k_prime, h_na_prime, v_prime]
-
-# g = Grid([-100.0,-0.2,-0.2], [150.0,1.2,1.2], [10,10,10], rybak_3d, -29.0, 0.1)
-# n_d_gen = MiindNDFileGenerator(g, 'rybak_3d', 0.001, -57.0, -15.0)
+# g = Grid([-200.0,-0.2], [200.0,1.2], [300,200], rybakPF, -15.0, 0.1)
+# n_d_gen = MiindNDFileGenerator(g, 'rybakPF', 0.001, -57.0, -15.0)
 # n_d_gen.generateModelFile()
 # n_d_gen.generateTMatFile()
+
+# 3D
+
+def rybak_3d(y, t):
+    g_nap = 0.25 #mS
+    g_na = 30
+    g_k = 6 # In the paper, this is quoted as g_k = 1 but we get no oscillations with that value
+    # this is the only change that needs to be made to make it all work.
+    E_na = 55 #mV
+    E_k = -80
+    C = 1 #uF
+    g_l = 0.1 #mS
+    E_l = -64.0 #mV
+    I = 0.15 #
+    I_h = 0
+
+    v = y[2]
+    h_na = y[1] #0.65
+    m_k = y[0]
+
+    I_l = -g_l*(v - E_l)
+    I_na = -g_na * h_na * (v - E_na) * (((1 + np.exp(-(v+35)/7.8))**-1)**3)
+    I_k = -g_k * ((m_k)**4) * (v - E_k)
+
+    v_prime = I_na + I_k + I_l + I
+
+    part_1 = ((1 + (np.exp((v + 55)/7)))**(-1)) - h_na
+    part_2 = 30 / (np.exp((v+50)/15) + np.exp(-(v+50)/16))
+    h_na_prime = part_1 / part_2
+
+    part_1 = ((1 + (np.exp(-(v + 28)/15)))**(-1)) - m_k
+    part_2 = 7 / (np.exp((v+40)/40) + np.exp((-v + 40)/50))
+    m_k_prime = part_1 / part_2
+
+    return [m_k_prime, h_na_prime, v_prime]
+
+g = Grid([-100.0,-0.2,-0.2], [150.0,1.2,1.2], [100,100,100], rybak_3d, -29.0, 0.1)
+n_d_gen = MiindNDFileGenerator(g, 'rybak_3d', 0.001, -57.0, -15.0)
+n_d_gen.generateModelFile()
+n_d_gen.generateTMatFile()
+# n_d_gen.generateTMatFile(True,10)
