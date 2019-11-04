@@ -1,3 +1,6 @@
+#ifndef APP_ND_GRID_POINT
+#define APP_ND_GRID_POINT
+
 #include <vector>
 
 class Point {
@@ -15,7 +18,28 @@ public:
     dead(false),
     hyper(false) {}
 
-    bool Point::operator==(const Point &other) const {
+    Point() :
+    coords(0),
+    lives(0),
+    connected(0),
+    dead(false),
+    hyper(false) {}
+
+    Point& operator=(const Point &other) {
+        for(unsigned int i=0; i<other.coords.size(); i++)
+            coords[i] = other.coords[i];
+
+        for(unsigned int i=0; i<other.connected.size(); i++)
+            connected[i] = other.connected[i];
+
+        lives = other.lives;
+        dead = other.dead;
+        hyper = other.hyper;
+
+        return *this;
+    }
+
+    bool operator==(const Point &other) const {
         if(other.coords.size() != coords.size())
             return false;
         
@@ -27,3 +51,5 @@ public:
     }
 
 };
+
+#endif
