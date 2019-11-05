@@ -184,6 +184,11 @@ void CudaOde2DSystemAdapter::updateGroupMass()
 		 }
 }
 
+MPILib::Potential CudaOde2DSystemAdapter::getAvgV(unsigned int m){
+	vector<MPILib::Potential> pots = _group.AvgV();
+	return pots[m];
+}
+
 void CudaOde2DSystemAdapter::updateRefractory()
 {
 	for (unsigned int m = 0; m < _refractory_mass_local.size(); m++)

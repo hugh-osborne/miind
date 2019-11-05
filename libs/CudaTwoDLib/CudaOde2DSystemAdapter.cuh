@@ -77,6 +77,8 @@ namespace CudaTwoDLib {
 
 								void updateGroupMass();
 
+								MPILib::Potential getAvgV(unsigned int m);
+
 								void updateRefractory();
 
 								fptype sumRefractory();

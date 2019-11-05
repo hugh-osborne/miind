@@ -17,7 +17,7 @@ public:
     std::vector<Point> points;
     std::vector<Point> lines;
 
-    Simplex(unsigned int num_dims, std::vector<std::vector<double>> _points, Triangulator& _triangulator):
+    Simplex(unsigned int num_dims, std::vector<std::vector<double>>& _points, Triangulator& _triangulator):
     num_dimensions(num_dims),
     points(_points.size()),
     lines(0),

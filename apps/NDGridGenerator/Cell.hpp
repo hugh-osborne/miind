@@ -6,21 +6,19 @@ public:
     std::vector<unsigned int> grid_coords;
     unsigned int num_dimensions;
     Triangulator& triangulator;
-    std::vector<Point> points;
     std::vector<Simplex> simplices;
     std::map<unsigned int, std::vector<double>> hyps;
 
     Cell(std::vector<unsigned int> _coords, unsigned int _num_dims, std::vector<Point>& _points, Triangulator& _triangulator):
     grid_coords(_coords),
     num_dimensions(_num_dims),
-    points(_points),
     triangulator(_triangulator) {
-        simplices = generateSimplices();
-        hyps = calculateAAHyperplanes();
+        simplices = generateSimplices(_points);
+        hyps = calculateAAHyperplanes(_points);
     }
 
-    std::vector<Simplex> generateSimplices() {
-        return triangulator.generateCellSimplices(num_dimensions, points);
+    std::vector<Simplex> generateSimplices(std::vector<Point>& _points) {
+        return triangulator.generateCellSimplices(num_dimensions, _points);
     }
 
     double getVolume(){
@@ -30,16 +28,16 @@ public:
         return vol;
     }
 
-    std::map<unsigned int, std::vector<double>> calculateAAHyperplanes() {
+    std::map<unsigned int, std::vector<double>> calculateAAHyperplanes(std::vector<Point>& _points) {
         std::map<unsigned int, std::vector<double>> out;
         for(unsigned int d=0; d<num_dimensions; d++) {
-            double max = points[0].coords[d];
-            double min = points[0].coords[d];
-            for(unsigned int i=1; i<points.size(); i++) {
-                if (max < points[i].coords[d])
-                    max = points[i].coords[d];
-                if (min > points[i].coords[d])
-                    min = points[i].coords[d];
+            double max = _points[0].coords[d];
+            double min = _points[0].coords[d];
+            for(unsigned int i=1; i<_points.size(); i++) {
+                if (max < _points[i].coords[d])
+                    max = _points[i].coords[d];
+                if (min > _points[i].coords[d])
+                    min = _points[i].coords[d];
             }
             std::vector<double> pair(2);
             pair[0] = min;

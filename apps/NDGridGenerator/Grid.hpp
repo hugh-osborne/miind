@@ -28,7 +28,39 @@ public:
         // points = generate_points();
     }
 
-    // std::vector<Point> generate_points() {
+    // std::vector<Cell> generate_cells(std::vector<unsigned int> cell_coord, std::vector<unsigned int> res) {
+    //     unsigned int res_head = res[0];
+        
+    //     std::vector<Cell> cells;
+    //     if (res.size() == 2) {
+    //         std::vector<unsigned int> res_tail(res.size()-1);
 
+    //         for (unsigned int i=0; i<res_tail.size(); i++)
+    //             res_tail[i] = res[i+1];
+
+    //         for (unsigned int d=0; d<res_head; d++) {
+    //             std::vector<unsigned int> full_coord(cell_coord.size()+1);
+    //             for (unsigned int c=0; c<cell_coord.size(); c++)
+    //                 full_coord[c] = cell_coord[c];
+    //             full_coord[cell_coord.size()] = d;
+
+    //             std::vector<Point> points;
+    //             std::vector<double> base_point_coords(num_dimensions);
+    //             for (unsigned int j=0; j<num_dimensions; j++) {
+    //                 base_point_coords[j] = base[j] + (full_coord[j]*(dimensions[j]/resolution[j]));
+    //             }
+
+    //             for (unsigned int i=0; i<pow(2,num_dimensions); i++) {
+    //                 std::vector<double> np(num_dimensions);
+    //                 for (unsigned int j=0; j<num_dimensions; j++){
+    //                     if ((i >> j) & 1 == 1)
+    //                         np[j] += 
+    //                 }
+    //                 Point p = Point()
+    //                 points.push_back();
+    //             }
+                
+    //         }
+    //     }
     // }
 };

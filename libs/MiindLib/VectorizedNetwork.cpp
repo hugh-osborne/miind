@@ -113,6 +113,13 @@ void VectorizedNetwork::reportNodeActivities(MPILib::Time sim_time){
 		ofst_rate.precision(10);
     ofst_rate << _rate_current_time[i] << "\t" << _current_node_rates[_rate_nodes[i]] << std::endl;
 		ofst_rate.close();
+
+    std::ostringstream ost3;
+		ost3 << "avg_v_" << _rate_nodes[i];
+		std::ofstream ofst_avg(ost3.str(), std::ofstream::app);
+		ofst_avg.precision(10);
+    ofst_avg << _rate_current_time[i] << "\t" << _group_adapter->getAvgV(_rate_nodes[i]) << std::endl;
+		ofst_avg.close();
 	}
 }
 
@@ -333,6 +340,8 @@ std::vector<double> VectorizedNetwork::singleStep(std::vector<double> activities
     monitored_rates[i] = group_rates[_node_id_to_group_mesh[_monitored_nodes[i]]];
   }
 
+
+
   if(_display_nodes.size() > 0){
     _group_adapter->updateGroupMass();
     TwoDLib::Display::getInstance()->updateDisplay(i_loop);
@@ -344,7 +353,10 @@ std::vector<double> VectorizedNetwork::singleStep(std::vector<double> activities
     reportNodeDensities(time);
   }
 
-  reportNodeActivities(time);
+  if(_rate_nodes.size() > 0){
+    _group_adapter->updateGroupMass();
+    reportNodeActivities(time);
+  }
 
   return monitored_rates;
 }
