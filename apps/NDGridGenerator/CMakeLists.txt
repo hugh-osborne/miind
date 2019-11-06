@@ -39,6 +39,6 @@ set ( LIBLIST
 #############################################################################
 # executables
 #############################################################################
-add_executable(generate Point.hpp Simplex.hpp Cell.hpp Triangulator.hpp Triangulator.cpp generate.cpp)
+add_executable(generate Point.hpp Simplex.hpp Cell.hpp Grid.hpp Triangulator.hpp Triangulator.cpp generate.cpp)
 
 install( TARGETS generate DESTINATION share/miind/apps/NDGridGenerator/ PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)

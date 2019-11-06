@@ -26,9 +26,11 @@ public:
     hyper(false) {}
 
     Point& operator=(const Point &other) {
+        coords = std::vector<double>(other.coords.size());
         for(unsigned int i=0; i<other.coords.size(); i++)
             coords[i] = other.coords[i];
 
+        connected = std::vector<Point*>(other.connected.size());
         for(unsigned int i=0; i<other.connected.size(); i++)
             connected[i] = other.connected[i];
 

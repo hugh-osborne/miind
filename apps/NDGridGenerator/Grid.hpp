@@ -23,7 +23,8 @@ public:
     timestep(_timestep) {
         num_dimensions = _dims.size();
 
-        generate_cells(std::vector<unsigned int>(), resolution);
+        generate_cells(std::vector<unsigned int>(), resolution, false);
+        generate_cells(std::vector<unsigned int>(), resolution, true);
     }
 
     // obviously this constrains the number of dimensions to a hard coded 3.
@@ -40,9 +41,9 @@ public:
         double I = 0.15;
         double I_h = 0.0;
 
-        double v = p.coords[2];
+        double v = p.coords[0];
         double h_na = p.coords[1];
-        double m_k = p.coords[0];
+        double m_k = p.coords[2];
 
         double I_l = -g_l*(v - E_l);
         double I_na = -g_na * h_na * (v - E_na) * (pow((pow((1 + exp(-(v+35)/7.8)),-1)),3));
@@ -54,8 +55,8 @@ public:
         double part_2 = 30 / (exp((v+50)/15) + exp(-(v+50)/16));
         double h_na_prime = part_1 / part_2;
 
-        double part_1 = (pow((1 + (exp(-(v + 28)/15))),-1)) - m_k;
-        double part_2 = 7 / (exp((v+40)/40) + exp((-v + 40)/50));
+        part_1 = (pow((1 + (exp(-(v + 28)/15))),-1)) - m_k;
+        part_2 = 7 / (exp((v+40)/40) + exp((-v + 40)/50));
         double m_k_prime = part_1 / part_2;
 
         p.coords[0] = m_k + (timestep)*m_k_prime;
@@ -64,18 +65,18 @@ public:
 
     }
 
-    void generate_cells(std::vector<unsigned int> cell_coord, std::vector<unsigned int> res) {
+    void generate_cells(std::vector<unsigned int> cell_coord, std::vector<unsigned int> res, bool btranslated) {
         unsigned int res_head = res[0];
 
-        if (res.size() <= 1) // We don't work with 1D
+        if (res.size() < 1) // We don't work with 1D
             return;
 
         std::vector<unsigned int> res_tail(res.size()-1);
 
         for (unsigned int i=0; i<res_tail.size(); i++)
             res_tail[i] = res[i+1];
-        
-        if (res.size() == 2) {
+
+        if (res.size() == 1) {
             for (unsigned int d=0; d<res_head; d++) {
                 std::vector<unsigned int> full_coord(cell_coord.size()+1);
                 for (unsigned int c=0; c<cell_coord.size(); c++)
@@ -97,9 +98,14 @@ public:
                             np[j] = base_point_coords[j];
                     }
                     Point p = Point(np);
-                    points.push_back(p);
+                    if(btranslated)
+                        applyFunctionEuler(p);
+                    points[i] = p;
                 }
-                cells.push_back(Cell(full_coord, num_dimensions, points, triangulator));
+                if(btranslated)
+                    cells_trans.push_back(Cell(full_coord, num_dimensions, points, triangulator));
+                else
+                    cells.push_back(Cell(full_coord, num_dimensions, points, triangulator));
             }
 
             return;
@@ -110,8 +116,122 @@ public:
             for (unsigned int c=0; c<cell_coord.size(); c++)
                 full_coord[c] = cell_coord[c];
             full_coord[cell_coord.size()] = d;
-            generate_cells(full_coord, res_tail);
+            generate_cells(full_coord, res_tail, btranslated);
         }
     }
+
+    unsigned int coords_to_index(std::vector<unsigned int> coords) {
+        unsigned int index = 0;
+        unsigned int operand = 1;
+        for (int c=num_dimensions-1; c>=0; c--) {
+            index += coords[c] * operand;
+            operand *= resolution[c];
+        }
+        std::vector<unsigned int> co = index_to_coords(index);
+        return index;
+    }
+
+    std::vector<unsigned int> index_to_coords(unsigned int index) {
+        std::vector<unsigned int> coords(num_dimensions);
+        unsigned int operand = 1;
+
+        std::vector<unsigned int> operands(num_dimensions);
+
+        for (int c=num_dimensions-1; c>=0; c--) {
+            operands[c] = operand;
+            operand *= resolution[c];
+        }
+
+        for (int c=0; c<num_dimensions-1; c++) {
+            unsigned int m = int(index / operands[c]);
+            coords[c] = m;
+            index = index % operands[c];
+        }
+        coords[num_dimensions-1] = index;
+        return coords;
+    }
+
+    std::vector<unsigned int> getCellCoordsForPoint(Point& p){
+        std::vector<unsigned int> coords(num_dimensions);
+        for(unsigned int c=0; c<num_dimensions; c++) {
+            coords[c] = int((p.coords[c] - base[c]) / (dimensions[c]/resolution[c]));
+            if (coords[c] >= resolution[c])
+                coords[c] = resolution[c]-1;
+            if (coords[c] < 0)
+                coords[c] = 0;
+        }
+        return coords;
+    }
+
+    void buildCellRange(std::vector<Cell*>& cell_ptrs, std::vector<unsigned int> base_min, std::vector<unsigned int> max_coords, std::vector<unsigned int> min_coords) {
+
+        if (max_coords.size() == 1) {
+            for(unsigned int i=0; i<(max_coords[0] - min_coords[0])+1; i++) {
+                std::vector<unsigned int> nb = base_min;
+                nb.push_back(min_coords[0] + i);
+                cell_ptrs.push_back(&cells[coords_to_index(nb)]);
+            }
+        } else {
+            for(unsigned int i=0; i<(max_coords[0] - min_coords[0])+1; i++){
+                std::vector<unsigned int> nb = base_min;
+                nb.push_back(min_coords[0] + i);
+
+                std::vector<unsigned int> max_tail(max_coords.size()-1);    
+                for(unsigned int j=0; j<max_coords.size()-1; j++)
+                    max_tail[j] = max_coords[j+1];
+
+                std::vector<unsigned int> min_tail(min_coords.size()-1);    
+                for(unsigned int j=0; j<min_coords.size()-1; j++)
+                    min_tail[j] = min_coords[j+1];
+
+                buildCellRange(cell_ptrs, nb, max_tail, min_tail);
+            }
+        }
+    }
+
+    std::vector<Cell*> getCellRange(Cell& tcell) {
+        std::vector<double> max = tcell.simplices[0].points[0].coords;
+        std::vector<double> min = tcell.simplices[0].points[0].coords;
+
+        for (unsigned int c=0; c<num_dimensions; c++) {
+            for (Simplex s : tcell.simplices){
+                for (Point p : s.points) {
+                    if (max[c] < p.coords[c])
+                        max[c] = p.coords[c];
+                    if (min[c] > p.coords[c])
+                        min[c] = p.coords[c];
+                }
+            }
+        }
+
+        Point p_max = Point(max);
+        Point p_min = Point(min);
+
+        std::vector<unsigned int> max_coords = getCellCoordsForPoint(p_max);
+        std::vector<unsigned int> min_coords = getCellCoordsForPoint(p_min);
+
+        std::vector<Cell*> cells;
+        buildCellRange(cells, std::vector<unsigned int>(), max_coords, min_coords);
+        return cells;
+    }
     
+    std::map<std::vector<unsigned int>,double>
+    calculateTransitionForCell(Cell& tcell, std::vector<Cell*> cell_range) {
+        std::map<std::vector<unsigned int>,double> t;
+        for(Cell* check_cell : cell_range) {
+            // double prop = tcell.intersectsWith(*check_cell);
+            double prop = 1.0;
+            t[check_cell->grid_coords] = prop;
+            std::cout << tcell.grid_coords[0] << "," << tcell.grid_coords[1] << "," << tcell.grid_coords[2] << " : " << prop << "\n";
+        } 
+        return t;
+    }
+
+    void calculateTransitionMatrix() {      
+        for (Cell cell : cells_trans) {
+            std::vector<Cell*> check_cells = getCellRange(cell);
+            std::map<std::vector<unsigned int>, double> ts = calculateTransitionForCell(cell, check_cells);
+        }
+    }
+
 };

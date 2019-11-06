@@ -44,10 +44,10 @@ public:
     triangulator(_triangulator) {
 
         for (unsigned int i=0; i<points.size(); i++) {
-            points[i].connected = std::vector<Point*>(points.size()-1);
+            points[i].connected = std::vector<Point*>();
             for (unsigned int j=0; j<points.size(); j++) {
                 if (j == i) continue;
-                points[i].connected[j] = &points[j];
+                points[i].connected.push_back(&points[j]);
             }
         }
 

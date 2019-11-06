@@ -483,7 +483,7 @@ class Triangulator:
             for jh,jt in it.items():
                 cpp += '\t\ttransitions[{}][{}] = std::map<unsigned int, std::vector<std::vector<unsigned int>>>();\n'.format(ih, jh) 
                 for kh,kt in jt.items():
-                    cpp += '\t\ttransitions[{}][{}][{}] = std::vector<std::vector<unsigned int>>();\n'.format(ih, jh, kh) 
+                    cpp += '\t\ttransitions[{}][{}][{}] = std::vector<std::vector<unsigned int>>({});\n'.format(ih, jh, kh, len(kt)) 
                     for l in range(len(kt)):
                         cpp += '\t\ttransitions[{}][{}][{}][{}] = std::vector<unsigned int>({});\n'.format(ih, jh, kh, l, len(kt[l]))
                         for m in range(len(kt[l])):
