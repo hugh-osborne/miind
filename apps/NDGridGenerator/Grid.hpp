@@ -3,11 +3,16 @@
 #include "Cell.hpp"
 #include "Triangulator.hpp"
 
+#include <iostream>
+#include <fstream>
+#include <omp.h>
+
 class Grid {
 public:
     double timestep;
     unsigned int num_dimensions;
     double threshold_v;
+    double reset_v;
     Triangulator triangulator;
     std::vector<double> dimensions;
     std::vector<unsigned int> resolution;
@@ -15,11 +20,12 @@ public:
     std::vector<Cell> cells;
     std::vector<Cell> cells_trans;
 
-    Grid(std::vector<double> _base, std::vector<double> _dims, std::vector<unsigned int> _res, double _threshold_v, double _timestep):
+    Grid(std::vector<double> _base, std::vector<double> _dims, std::vector<unsigned int> _res, double _threshold_v, double _reset_v, double _timestep):
     base(_base),
     dimensions(_dims),
     resolution(_res),
     threshold_v(_threshold_v),
+    reset_v(_reset_v),
     timestep(_timestep) {
         num_dimensions = _dims.size();
 
@@ -118,6 +124,32 @@ public:
             full_coord[cell_coord.size()] = d;
             generate_cells(full_coord, res_tail, btranslated);
         }
+    }
+
+    std::vector<unsigned int> cell_index_to_coords(unsigned int index) {
+        std::vector<unsigned int> coords(num_dimensions);
+        for(unsigned int d = num_dimensions-1; d >= 0; d--) {
+            unsigned int rem = index % d;
+            coords[d] = rem;
+            index = int((index / rem) / d);
+        }
+        return coords;
+    }
+
+    std::vector<unsigned int> coords_to_strip_and_cell(std::vector<unsigned int> coords) {
+        unsigned int index = 0;
+        unsigned int multiplicand = 1;
+        for (unsigned int res : resolution) 
+            multiplicand *= res;
+        for(unsigned int d=0; d<num_dimensions-1; d++) {
+            multiplicand /= resolution[d];
+            index += int(coords[d] * multiplicand);
+        }
+        index /= resolution[num_dimensions-1];
+        std::vector<unsigned int> pair(2);
+        pair[0] = index;
+        pair[1] = coords[num_dimensions-1];
+        return pair;
     }
 
     unsigned int coords_to_index(std::vector<unsigned int> coords) {
@@ -219,7 +251,6 @@ public:
     std::map<std::vector<unsigned int>,double>
     calculateTransitionForCell(Cell& tcell, std::vector<Cell*> cell_range) {
         std::map<std::vector<unsigned int>,double> t;
-        std::cout << tcell.grid_coords[0] << " " << tcell.grid_coords[1] << " " << tcell.grid_coords[2] << ": \n";
         for(Cell* check_cell : cell_range) {
             double prop = tcell.intersectsWith(*check_cell);
             if (prop == 0)
@@ -229,8 +260,11 @@ public:
         return t;
     }
 
-    void calculateTransitionMatrix() {      
-        for (Cell cell : cells_trans) {
+    std::map<std::vector<unsigned int> ,std::map<std::vector<unsigned int>, double>> calculateTransitionMatrix() {  
+        std::map<std::vector<unsigned int> ,std::map<std::vector<unsigned int>, double>> transitions;    
+#pragma omp parallel for
+        for (unsigned int c=0; c < cells_trans.size(); c++) {
+            Cell cell = cells_trans[c];
             std::vector<Cell*> check_cells = getCellRange(cell);
             std::map<std::vector<unsigned int>, double> ts = calculateTransitionForCell(cell, check_cells);
 
@@ -242,14 +276,146 @@ public:
             for(auto const& kv : ts){
                 total_prop += kv.second;
             }
-            double missed_prop = 1.0 - total_prop;
-            double share_prop = missed_prop / ts.size();
+            double missed_prop = 1.0/total_prop;
 
             for(auto const& kv : ts){
-                ts[kv.first] += share_prop;
-                std::cout << kv.first[0] << "," << kv.first[1] << "," << kv.first[2] << " : " << ts[kv.first] << "\n";
+                double d = ts[kv.first];
+                ts[kv.first] *= missed_prop;
             }
+            transitions[cell.grid_coords] = ts;
+            if(transitions.size() % 100 == 0)
+                std::cout << transitions.size() << " complete(ish).\n";
         }
+        return transitions;
+    }
+
+    void generateTMatFileBatched(std::string basename) { 
+        unsigned int batch_size = 1000;
+        std::ofstream file;
+        file.open(basename + ".tmat");
+
+        file << "0\t0\n";
+
+        std::map<std::vector<unsigned int> ,std::map<std::vector<unsigned int>, double>> transitions;    
+        for (unsigned int batch=0; batch < cells_trans.size() / batch_size; batch++) {
+
+            for (unsigned int c=(batch*batch_size); c < (batch*batch_size)+batch_size; c++) {
+                Cell cell = cells_trans[c];
+                std::vector<Cell*> check_cells = getCellRange(cell);
+                std::map<std::vector<unsigned int>, double> ts = calculateTransitionForCell(cell, check_cells);
+
+                if (ts.size() == 0) { // cell was completely outside the grid, so don't move it.
+                    ts[cell.grid_coords] = 1.0;
+                }
+
+                double total_prop = 0.0;
+                for(auto const& kv : ts){
+                    total_prop += kv.second;
+                }
+                double missed_prop = 1.0/total_prop;
+
+                for(auto const& kv : ts){
+                    double d = ts[kv.first];
+                    ts[kv.first] *= missed_prop;
+                }
+                transitions[cell.grid_coords] = ts;
+            }
+
+            for(auto const& kv : transitions) {
+                std::vector<unsigned int> pair = coords_to_strip_and_cell(kv.first);
+                file << "1000000000;" << pair[0] << "," << pair[1] << ";";
+                for(auto const& tv : kv.second) {
+                    std::vector<unsigned int> tpair = coords_to_strip_and_cell(tv.first);
+                    file << tpair[0] << "," << tpair[1] << ":" << tv.second << ";";
+                }
+                file << "\n";
+            }
+
+            std::cout << batch*batch_size << " complete.\n";
+            transitions.clear();
+        }
+    }
+
+    void generateTMatFileLowMemory(std::string basename) {
+        std::ofstream file;
+        file.open(basename + ".tmat");
+
+        file << "0\t0\n";
+        unsigned int num_lines = 0;
+        for(Cell cell : cells_trans) {
+            std::vector<unsigned int> pair = coords_to_strip_and_cell(cell.grid_coords);
+            file << "1000000000;" << pair[0] << "," << pair[1] << ";";
+            std::vector<Cell*> check_cells = getCellRange(cell);
+            std::map<std::vector<unsigned int>, double> ts = calculateTransitionForCell(cell, check_cells);
+
+            if (ts.size() == 0) { // cell was completely outside the grid, so don't move it.
+                ts[cell.grid_coords] = 1.0;
+            }
+
+            double total_prop = 0.0;
+            for(auto const& kv : ts){
+                total_prop += kv.second;
+            }
+            double missed_prop = 1.0/total_prop;
+
+            for(auto const& kv : ts){
+                double d = ts[kv.first];
+                ts[kv.first] *= missed_prop;
+                std::vector<unsigned int> tpair = coords_to_strip_and_cell(kv.first);
+                file << tpair[0] << "," << tpair[1] << ":" << kv.second << ";";
+            }
+            
+            file << "\n";
+            num_lines++;
+            if(num_lines % 100 == 0)
+                std::cout << num_lines << " complete.\n";
+        }
+
+        file.close();
+    }
+
+    void generateTMatFile(std::string basename) {
+
+        std::map<std::vector<unsigned int> ,std::map<std::vector<unsigned int>, double>> trs = calculateTransitionMatrix();
+
+        std::ofstream file;
+        file.open(basename + ".tmat");
+
+        file << "0\t0\n";
+        for(auto const& kv : trs) {
+            std::vector<unsigned int> pair = coords_to_strip_and_cell(kv.first);
+            file << "1000000000;" << pair[0] << "," << pair[1] << ";";
+            for(auto const& tv : kv.second) {
+                std::vector<unsigned int> tpair = coords_to_strip_and_cell(tv.first);
+                file << tpair[0] << "," << tpair[1] << ":" << tv.second << ";";
+            }
+            file << "\n";
+        }
+
+        file.close();
+    }
+
+    void generateModelFile(std::string basename) {
+        std::ofstream file;
+        file.open(basename + ".model");
+
+        file << "<Model>\n";
+        file << "<Mesh>\n";
+        file << "<TimeStep>" << timestep*0.001 << "</TimeStep>\n";
+        file << "</Mesh>\n";
+        file << "<Stationary>\n";
+        file << "</Stationary>\n";
+        file << "<Mapping type = \"Reversal\">\n";
+        file << "</Mapping>\n";
+        file << "<threshold>" << threshold_v << "</threshold>\n";
+        file << "<V_reset>" << reset_v << "</V_reset>\n";
+
+        file << "<Mapping type=\"Reset\">\n";
+        file << "</Mapping>\n";
+
+        file << "</Model>\n";
+
+        file.close();
     }
 
 };
