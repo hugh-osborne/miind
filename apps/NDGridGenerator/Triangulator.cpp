@@ -25,10 +25,13 @@ std::vector<Simplex> Triangulator::chooseTriangulation(unsigned int num_dimensio
 	std::vector<Simplex> out;
 	for (unsigned int t=0; t <tris.size(); t++) {
 		std::vector<Point> ps(tris[t].size());
-		for (unsigned int i=0; i<tris[t].size(); i++)
-			ps[i] = points[all_inds[i]];
+		for (unsigned int i=0; i<tris[t].size(); i++){
+			ps[i] = points[tris[t][i]];
+		}
+			
 		out.push_back(Simplex(num_dimensions, ps, *this));
 	}
+	return out;
 }
 
 std::vector<Simplex> Triangulator::generateCellSimplices(unsigned int num_dimensions, std::vector<Point>& points) {

@@ -454,9 +454,10 @@ class Triangulator:
         cpp += '\tfor (unsigned int t=0; t <tris.size(); t++) {\n'
         cpp += '\t\tstd::vector<Point> ps(tris[t].size());\n'
         cpp += '\t\tfor (unsigned int i=0; i<tris[t].size(); i++)\n'
-        cpp += '\t\t\tps[i] = points[all_inds[i]];\n'
+        cpp += '\t\t\tps[i] = points[tris[t][i]];\n'
         cpp += '\t\tout.push_back(Simplex(num_dimensions, ps, *this));\n'
         cpp += '\t}\n'
+        cpp += '\treturn out;\n'
         cpp += '}\n'
         cpp += '\n'
 

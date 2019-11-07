@@ -49,30 +49,39 @@ public:
     }
 
     double intersectsWith(Cell& other) {
-        double vol_eps = 0.0000000000001;
+        double vol_eps = 0.00000000001;
         double orig_vol = getVolume();
+
+        std::vector<Simplex> test_simplices = simplices;
         
-        for(auto const& kv : hyps){
+        for(auto const& kv : other.hyps){
             std::vector<Simplex> new_simplices_1;
-            for(Simplex s : simplices) {
+            for(Simplex s : test_simplices) {
                 if (s.getVolume() < vol_eps)
                     continue;
-                for(Simplex ns : s.intersectWithHyperplane(kv.first, kv.second[0])[1])
+
+                std::vector<Simplex> st = s.intersectWithHyperplane(kv.first, kv.second[0])[0];
+
+                for(Simplex ns : st)
                     new_simplices_1.push_back(ns);
             }
             std::vector<Simplex> new_simplices_2;
             for(Simplex s : new_simplices_1) {
                 if (s.getVolume() < vol_eps)
                     continue;
-                for(Simplex ns : s.intersectWithHyperplane(kv.first, kv.second[1])[0])
+
+                std::vector<Simplex> st = s.intersectWithHyperplane(kv.first, kv.second[1])[1];
+
+                for(Simplex ns : st)
                     new_simplices_2.push_back(ns);
             }
-            simplices = new_simplices_2;
+            test_simplices = new_simplices_2;
         }
 
         double vol_prop = 0.0;
-        for(Simplex s : simplices)
-            vol_prop += s.getVolume() / orig_vol;
-        return vol_prop;
+        for(Simplex s : test_simplices){
+            vol_prop += s.getVolume();
+        }
+        return vol_prop / orig_vol;
     }
 };

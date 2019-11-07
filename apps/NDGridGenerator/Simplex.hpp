@@ -91,7 +91,7 @@ public:
         for(unsigned int p=0; p<points.size()-1; p++) {
             std::vector<double> coords(num_dimensions);
             for (unsigned int c=0; c<num_dimensions; c++)
-                coords[c] = points[p].coords[c] - points[0].coords[0];
+                coords[c] = points[p+1].coords[c] - points[0].coords[c];
             lines[p] = Point(coords);
         }
         return lines;
@@ -132,7 +132,7 @@ public:
         for(unsigned int n=0; n<num_dimensions; n++)
             dim_fac += n;
 
-        return std::abs(CalcDeterminant(m)/dim_fac);
+        return std::abs(CalcDeterminant(m)/dim_fac)/2;
     }
 
     std::vector<std::vector<Simplex>> intersectWithHyperplane(unsigned int dim_index, double dim) {
@@ -140,14 +140,15 @@ public:
 
         std::vector<Point*> lower;
         std::vector<Point*> upper;
-        for (Point p : points) {
-            if(p.coords[dim_index] < dim - eps) lower.push_back(&p);
-            if(p.coords[dim_index] > dim + eps) upper.push_back(&p);
+        for (unsigned int i=0; i<points.size(); i++) {
+            if(points[i].coords[dim_index] < dim - eps) lower.push_back(&points[i]);
+            if(points[i].coords[dim_index] > dim + eps) upper.push_back(&points[i]);
         }
 
         std::vector<Point> p_outs;
         for (Point* p0 : lower){
             for (Point* p1 : upper) {
+                
                 double t = (dim - p0->coords[dim_index]) / (p1->coords[dim_index] - p0->coords[dim_index]);
                 std::vector<double> coords(num_dimensions);
                 for (unsigned int i=0; i<num_dimensions; i++){
@@ -170,13 +171,18 @@ public:
 
         if (p_outs.size() == 0) {
             std::vector<std::vector<Simplex>> out;
-            if (points[0].coords[dim_index] > dim){
-                std::vector<Simplex> less;
+            bool points_above = false;
+            for(Point p : points) 
+                points_above |= p.coords[dim_index] > dim + eps;
+
+            std::vector<Simplex> less;
+            std::vector<Simplex> greater;
+
+            if (points_above){
                 less.push_back(Simplex(num_dimensions, points, triangulator));
                 out.push_back(less);
                 out.push_back(std::vector<Simplex>());
-            } else if (points[0].coords[dim_index] < dim){
-                std::vector<Simplex> greater;
+            } else {
                 greater.push_back(Simplex(num_dimensions, points, triangulator));
                 out.push_back(std::vector<Simplex>());
                 out.push_back(greater); 
@@ -217,28 +223,28 @@ public:
 
         std::vector<Point> p_total(lower.size()+upper.size()+p_outs.size()+p_equal.size());
         for(unsigned int i=0; i<lower.size(); i++){
-            p_total[i] = *lower[i];
+            p_total[i] = *(lower[i]);
         }
         for(unsigned int i=0; i<upper.size(); i++){
-            p_total[lower.size()+i] = *upper[i];
+            p_total[lower.size()+i] = *(upper[i]);
         }
         for(unsigned int i=0; i<p_outs.size(); i++){
             p_total[lower.size()+upper.size()+i] = p_outs[i];
         }
         for(unsigned int i=0; i<p_equal.size(); i++){
-            p_total[lower.size()+upper.size()+p_outs.size()+i] = *p_equal[i];
+            p_total[lower.size()+upper.size()+p_outs.size()+i] = *(p_equal[i]);
         }
 
         std::vector<Simplex> simplices = triangulator.chooseTriangulation(num_dimensions, p_total, i_less, i_greater, i_hyp, i_all);
-
+        
         std::vector<Simplex> less;
         std::vector<Simplex> greater;
         for (Simplex s : simplices){
             bool all_above = true;
             bool all_below = true;
             for (Point p : s.points) {
-                all_above &= p.coords[dim_index] >= dim;
-                all_below &= p.coords[dim_index] <= dim;
+                all_above &= p.coords[dim_index] >= dim-eps;
+                all_below &= p.coords[dim_index] <= dim+eps;
             }
 
             if (all_above)

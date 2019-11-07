@@ -59,9 +59,9 @@ public:
         part_2 = 7 / (exp((v+40)/40) + exp((-v + 40)/50));
         double m_k_prime = part_1 / part_2;
 
-        p.coords[0] = m_k + (timestep)*m_k_prime;
+        p.coords[2] = m_k + (timestep)*m_k_prime;
         p.coords[1] = h_na + (timestep)*h_na_prime;
-        p.coords[2] = v + (timestep)*v_prime;
+        p.coords[0] = v + (timestep)*v_prime;
 
     }
 
@@ -154,11 +154,12 @@ public:
     std::vector<unsigned int> getCellCoordsForPoint(Point& p){
         std::vector<unsigned int> coords(num_dimensions);
         for(unsigned int c=0; c<num_dimensions; c++) {
-            coords[c] = int((p.coords[c] - base[c]) / (dimensions[c]/resolution[c]));
-            if (coords[c] >= resolution[c])
-                coords[c] = resolution[c]-1;
-            if (coords[c] < 0)
-                coords[c] = 0;
+            int co = int((p.coords[c] - base[c]) / (dimensions[c]/resolution[c]));
+            if (co >= int(resolution[c]))
+                co = resolution[c]-1;
+            if (co < 0)
+                co = 0;
+            coords[c] = co;
         }
         return coords;
     }
@@ -171,7 +172,7 @@ public:
                 nb.push_back(min_coords[0] + i);
                 cell_ptrs.push_back(&cells[coords_to_index(nb)]);
             }
-        } else {
+        } else  if (max_coords.size() > 1) {
             for(unsigned int i=0; i<(max_coords[0] - min_coords[0])+1; i++){
                 std::vector<unsigned int> nb = base_min;
                 nb.push_back(min_coords[0] + i);
@@ -218,11 +219,12 @@ public:
     std::map<std::vector<unsigned int>,double>
     calculateTransitionForCell(Cell& tcell, std::vector<Cell*> cell_range) {
         std::map<std::vector<unsigned int>,double> t;
+        std::cout << tcell.grid_coords[0] << " " << tcell.grid_coords[1] << " " << tcell.grid_coords[2] << ": \n";
         for(Cell* check_cell : cell_range) {
-            // double prop = tcell.intersectsWith(*check_cell);
-            double prop = 1.0;
+            double prop = tcell.intersectsWith(*check_cell);
+            if (prop == 0)
+                continue;
             t[check_cell->grid_coords] = prop;
-            std::cout << tcell.grid_coords[0] << "," << tcell.grid_coords[1] << "," << tcell.grid_coords[2] << " : " << prop << "\n";
         } 
         return t;
     }
@@ -231,6 +233,22 @@ public:
         for (Cell cell : cells_trans) {
             std::vector<Cell*> check_cells = getCellRange(cell);
             std::map<std::vector<unsigned int>, double> ts = calculateTransitionForCell(cell, check_cells);
+
+            if (ts.size() == 0) { // cell was completely outside the grid, so don't move it.
+                ts[cell.grid_coords] = 1.0;
+            }
+
+            double total_prop = 0.0;
+            for(auto const& kv : ts){
+                total_prop += kv.second;
+            }
+            double missed_prop = 1.0 - total_prop;
+            double share_prop = missed_prop / ts.size();
+
+            for(auto const& kv : ts){
+                ts[kv.first] += share_prop;
+                std::cout << kv.first[0] << "," << kv.first[1] << "," << kv.first[2] << " : " << ts[kv.first] << "\n";
+            }
         }
     }
 
