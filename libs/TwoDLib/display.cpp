@@ -108,6 +108,8 @@ void Display::display(void) {
 	if (_dws.size() == 0)
 		return;
 
+	static float rot = 0.0;
+
 	milliseconds real_time = duration_cast< milliseconds >(
     system_clock::now().time_since_epoch());
 	milliseconds time_elapsed = real_time - start_time;
@@ -121,7 +123,7 @@ void Display::display(void) {
 	// if (time_elapsed.count() % 10 != 0)
 	// 	return;
 
-	glClearColor(0.0f, 0.0f, 0.2f, 0.0f);
+	glClearColor(0.0f, 0.0f, 0.2f, 1.0f);
 
 	// glClear(GL_COLOR_BUFFER_BIT);
 
@@ -256,8 +258,10 @@ void Display::display(void) {
 
 	// Display 3D mass
 
-	double rot_y_angle = -M_PI_4;
-	double rot_x_angle = 0;
+	double rot_y_angle = -M_PI_4+(rot);
+	double rot_x_angle = (-M_PI_4/2.0);
+
+	rot += 0.01;
 
 	double x_scale = 1.0;
 	double y_scale = 1.0;
@@ -267,17 +271,19 @@ void Display::display(void) {
 	double y_pos = 0.0;
 	double z_pos = -1.0;
 
+	unsigned int size = 50;
+
 	std::vector<std::vector<double>> world_scale = {{x_scale,0.0,0.0,0.0},{0.0,y_scale,0.0,0.0},{0.0,0.0,z_scale,0.0},{0.0,0.0,0.0,1.0}};
 	std::vector<std::vector<double>> world_x_rotation = {{1.0,0.0,0.0,0.0},{0.0,cos(rot_x_angle),sin(rot_x_angle),0.0},{0.0,-sin(rot_x_angle),cos(rot_x_angle),0.0},{0.0,0.0,0.0,1.0}};
 	std::vector<std::vector<double>> world_y_rotation = {{cos(rot_y_angle),0.0,sin(rot_y_angle),0.0},{0.0,1.0,0.0,0.0},{-sin(rot_y_angle),0.0,cos(rot_y_angle),0.0},{0.0,0.0,0.0,1.0}};
 	std::vector<std::vector<double>> world_translate = {{1.0,0.0,0.0,x_pos},{0.0,1.0,0.0,y_pos},{0.0,0.0,1.0,z_pos},{0.0,0.0,0.0,1.0}};
 
 	double max_mass = 0.0;
-	for(unsigned int i = 0; i<100; i++){
-		for(unsigned int k = 0; k<100; k++){
+	for(unsigned int i = 0; i<size; i++){
+		for(unsigned int k = 0; k<size; k++){
 			for(unsigned int j = 0; j<m.NrCellsInStrip(i); j++) {
-				unsigned int idx = _dws[window_index]._system->Map(_dws[window_index]._mesh_index,(i*100)+k,j);
-				if (i != 0 && k != 0 && j != 0 && i != 99 && k != 99 && j != 99)
+				unsigned int idx = _dws[window_index]._system->Map(_dws[window_index]._mesh_index,(k*size)+i,j);
+				if (i != 0 && k != 0 && j != 0 && i != size-1 && k != size-1 && j != size-1)
 					if (_dws[window_index]._system->Mass()[idx] == 0) continue; // skip if mass is basically nothing
 
 				double cell_area = std::abs(m.Quad(0,0).SignedArea());
@@ -285,19 +291,19 @@ void Display::display(void) {
 				if (cell_area != 0 && _dws[window_index]._system->Mass()[idx] > 0.0)
 					mass = (log10(_dws[window_index]._system->Mass()[idx]/cell_area) - min) / (max-min);
 
-				if (i == 0 || k == 0 || j == 0 || i == 99 || k == 99 || j == 99)
+				if (i == 0 || k == 0 || j == 0 || i == size-1 || k == size-1 || j == size-1)
 					glColor4f(1.0, 1.0, 1.0, 0.01);
 				else
 					glColor4f(std::min(1.0,mass*2.0), std::max(0.0,((mass*2.0) - 1.0)), 0, mass);
 
 
-				double cell_x = -0.5 + j*(1.0/100.0);
-				double cell_y = -0.5 + k*(1.0/100.0);
-				double cell_z = -0.5 + i*(1.0/100.0);
+				double cell_x = -0.5 + j*(1.0/size);
+				double cell_y = -0.5 + i*(1.0/size);
+				double cell_z = -0.5 + k*(1.0/size);
 
-				double half_cell_x_width = 0.5/100.0;
-				double half_cell_y_width = 0.5/100.0;
-				double half_cell_z_width = 0.5/100.0;
+				double half_cell_x_width = 0.95*(0.5/size);
+				double half_cell_y_width = 0.95*(0.5/size);
+				double half_cell_z_width = 0.95*(0.5/size);
 
 				std::vector<double> p1 = {cell_x - half_cell_x_width, cell_y - half_cell_y_width, cell_z + half_cell_z_width, 1.0};
 				std::vector<double> p2 = {cell_x - half_cell_x_width, cell_y + half_cell_y_width, cell_z + half_cell_z_width, 1.0};
@@ -344,13 +350,13 @@ void Display::display(void) {
 				p7 = mat_mult(world_translate, p7);
 				p8 = mat_mult(world_translate, p8);
 
-				// front face
+				// front face bad
 				glVertex3f(p1[0], p1[1], p1[2]);
 				glVertex3f(p2[0], p2[1], p2[2]);
 				glVertex3f(p3[0], p3[1], p3[2]);
 				glVertex3f(p4[0], p4[1], p4[2]);
 
-				// back face
+				// back face bad
 				glVertex3f(p5[0], p5[1], p5[2]);
 				glVertex3f(p6[0], p6[1], p6[2]);
 				glVertex3f(p7[0], p7[1], p7[2]);
@@ -368,7 +374,7 @@ void Display::display(void) {
 				glVertex3f(p6[0], p6[1], p6[2]);
 				glVertex3f(p5[0], p5[1], p5[2]);
 
-				// top face
+				// top face good
 				glVertex3f(p2[0], p2[1], p2[2]);
 				glVertex3f(p6[0], p6[1], p6[2]);
 				glVertex3f(p7[0], p7[1], p7[2]);
@@ -532,7 +538,7 @@ void Display::scene(int width, int height)
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
   
-	gluPerspective(45.0f, (GLfloat)width / (GLfloat)height, 0.1f, 100.0f);
+	gluPerspective(45.0f, (GLfloat)width / (GLfloat)height, 0.1f, 10.0f);
   
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
@@ -544,10 +550,10 @@ void Display::scene(int width, int height)
 
 void Display::init() const {
 	// **** used for 3D ****
-	gluPerspective(45, 1, 2, 10);
-	glEnable(GL_DEPTH_TEST);
+	// gluPerspective(45, 1, 2, 10);
+	// glEnable(GL_DEPTH_TEST);
 	// *** used for both 2D and 3D ***
-	glClearColor(0.0f, 0.0f, 0.2f, 0.0f);
+	// glClearColor(0.0f, 0.0f, 0.2f, 0.0f);
 }
 
 void Display::update() {

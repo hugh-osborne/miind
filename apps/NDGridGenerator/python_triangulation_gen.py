@@ -425,6 +425,31 @@ class Triangulator:
 
         return cpp
 
+    def generate_cell_cube_unit_points(self):     
+        cpp  = 'std::vector<Point> Triangulator::generateUnitCubePoints(unsigned int num_dimensions) {\n'
+        cpp += '\tswitch(num_dimensions) {\n'
+        for i in range(self.num_dimensions-1):
+            i = i + 2
+            cpp += '\tcase {}: {{\n'.format(i)
+            tri = Triangulator(i)
+            unit_cell = tri.generate_cells([],[1 for a in range(tri.num_dimensions)])
+            unit_cell = tri.flatten([], unit_cell)[0]
+            cpp += '\t\tstd::vector<Point> points({});\n'.format(2**i)
+            for j in range(len(unit_cell.points)):
+                cpp += '\t\tstd::vector<double> coords_{}({});\n'.format(j,i)
+                for k in range(i):
+                    cpp += '\t\tcoords_{}[{}] = {};\n'.format(j,k,unit_cell.points[j].coords[k])
+                cpp += '\t\tpoints[{}] = Point(coords_{});\n'.format(j,j)
+            cpp += '\t\treturn points;\n'
+            cpp += '\t}\n'
+        
+        cpp += '\tdefault: {\n'
+        cpp +='\t\treturn std::vector<Point>();\n'
+        cpp += '\t}\n'
+        cpp += '\t}\n'
+        cpp += '}\n'
+
+        return cpp
 
     def generate_triangulations_cpp(self):
         cpp  = '#include "Point.hpp"\n'
@@ -494,6 +519,7 @@ class Triangulator:
         cpp += '\n\n'
         cpp += '\tstd::vector<Simplex> chooseTriangulation(unsigned int num_dimensions, std::vector<Point>& points, std::vector<unsigned int>& lower_inds, std::vector<unsigned int>& upper_inds, std::vector<unsigned int>& hyper_inds, std::vector<unsigned int>& all_inds);\n'
         cpp += '\tstd::vector<Simplex> generateCellSimplices(unsigned int num_dimensions, std::vector<Point>& points);\n'
+        cpp += '\tstd::vector<Point> generateUnitCubePoints(unsigned int num_dimensions);\n'
         cpp += '};\n'
         cpp += '\n#endif\n'
 
@@ -508,6 +534,7 @@ if __name__ == "__main__":
         with open('Triangulator.cpp', 'w') as f:
             f.write(t.generate_triangulations_cpp())
             f.write(t.generate_cell_simplices())
+            f.write(t.generate_cell_cube_unit_points())
         with open('Triangulator.hpp', 'w') as f:
             f.write(t.generate_triangulations_hpp())
 

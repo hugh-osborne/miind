@@ -148,7 +148,6 @@ public:
         std::vector<Point> p_outs;
         for (Point* p0 : lower){
             for (Point* p1 : upper) {
-                
                 double t = (dim - p0->coords[dim_index]) / (p1->coords[dim_index] - p0->coords[dim_index]);
                 std::vector<double> coords(num_dimensions);
                 for (unsigned int i=0; i<num_dimensions; i++){
@@ -171,14 +170,14 @@ public:
 
         if (p_outs.size() == 0) {
             std::vector<std::vector<Simplex>> out;
-            bool points_above = false;
+            bool points_above = true;
             for(Point p : points) 
-                points_above |= p.coords[dim_index] > dim + eps;
+                points_above &= p.coords[dim_index] >= dim - eps;
 
             std::vector<Simplex> less;
             std::vector<Simplex> greater;
 
-            if (points_above){
+            if (!points_above){
                 less.push_back(Simplex(num_dimensions, points, triangulator));
                 out.push_back(less);
                 out.push_back(std::vector<Simplex>());
@@ -215,8 +214,10 @@ public:
 
         std::vector<Point*> p_equal;
         for (Point p : points) {
-            if (p.coords[dim_index] <= dim + eps && p.coords[dim_index] >= dim - eps)
+            if (p.coords[dim_index] <= dim + eps && p.coords[dim_index] >= dim - eps) {
                 p_equal.push_back(&p);
+            }
+            
         }
         
         for (unsigned int i=0; i<p_equal.size(); i++) i_hyp.push_back(i + index);
@@ -236,7 +237,7 @@ public:
         }
 
         std::vector<Simplex> simplices = triangulator.chooseTriangulation(num_dimensions, p_total, i_less, i_greater, i_hyp, i_all);
-        
+
         std::vector<Simplex> less;
         std::vector<Simplex> greater;
         for (Simplex s : simplices){

@@ -49,33 +49,95 @@ public:
     }
 
     double intersectsWith(Cell& other) {
-        double vol_eps = 0.00000000001;
+        double vol_eps = 0.0000000000001;
         double orig_vol = getVolume();
 
         std::vector<Simplex> test_simplices = simplices;
+
+        double total_vol = 0.0;
         
         for(auto const& kv : other.hyps){
+            // trivial check if all points are above or below hyperplane
             std::vector<Simplex> new_simplices_1;
             for(Simplex s : test_simplices) {
                 if (s.getVolume() < vol_eps)
                     continue;
 
-                std::vector<Simplex> st = s.intersectWithHyperplane(kv.first, kv.second[0])[0];
+                // bool complete_in = true;
+                // bool complete_below = true;
+                // for(Point p : s.points){
+                //     complete_in &= p.coords[kv.first] >= kv.second[0] && p.coords[kv.first] <= kv.second[1];
+                //     complete_below &= p.coords[kv.first] <= kv.second[0];
+                // }
+
+                // if (complete_below) 
+                //     continue;
+                // if (complete_in) {
+                //     new_simplices_1.push_back(s);
+                //     continue;
+                // }
+                
+                std::vector<Simplex> st = s.intersectWithHyperplane(kv.first, kv.second[0])[1];
 
                 for(Simplex ns : st)
                     new_simplices_1.push_back(ns);
             }
+
+            // if(kv.first == 0){
+                
+            //     if(other.grid_coords[0] == 1 && other.grid_coords[1] == 1 && other.grid_coords[2] == 0 &&
+            //         grid_coords[0] == 0 && grid_coords[1] == 0 && grid_coords[2] == 0) {
+            //             std::cout << kv.first << " : " << kv.second[0] << " " << kv.second[1] << "\n";
+            //             for(Simplex s : new_simplices_1){
+            //                 for(Point p : s.points) {
+            //                     std::cout << "Point : " << p.coords[0] << "," << p.coords[1] << "," << p.coords[2] << "\n";
+            //                 }
+            //                 std::cout << "Prop : " << s.getVolume() << "\n";
+            //             }
+            //     }
+            // }
             std::vector<Simplex> new_simplices_2;
             for(Simplex s : new_simplices_1) {
                 if (s.getVolume() < vol_eps)
                     continue;
 
-                std::vector<Simplex> st = s.intersectWithHyperplane(kv.first, kv.second[1])[1];
+                // bool complete_in = true;
+                // bool complete_above = true;
+                // for(Point p : s.points){
+                //     complete_in &= p.coords[kv.first] >= kv.second[0] && p.coords[kv.first] <= kv.second[1];
+                //     complete_above &= p.coords[kv.first] >= kv.second[1];
+                // }
+
+                // if (complete_above) 
+                //     continue;
+                // if (complete_in) {
+                //     new_simplices_2.push_back(s);
+                //     continue;
+                // }
+
+                std::vector<Simplex> st = s.intersectWithHyperplane(kv.first, kv.second[1])[0];
 
                 for(Simplex ns : st)
                     new_simplices_2.push_back(ns);
             }
             test_simplices = new_simplices_2;
+
+
+                // if(other.grid_coords[0] == 1 && other.grid_coords[1] == 1 && other.grid_coords[2] == 0 &&
+                //     grid_coords[0] == 0 && grid_coords[1] == 0 && grid_coords[2] == 0) {
+                //         std::cout << kv.first << " : " << kv.second[0] << " " << kv.second[1] << "\n";
+                //         for(Simplex s : test_simplices){
+                //             for(Point p : s.points) {
+                //                 std::cout << "Point : " << p.coords[0] << "," << p.coords[1] << "," << p.coords[2] << "\n";
+                //             }
+                //             std::cout << "Prop : " << s.getVolume() << "\n";
+                //             total_vol += s.getVolume();
+                //             std::cout << total_vol << "\n";
+                //         }
+                // }
+            
+
+            
         }
 
         double vol_prop = 0.0;

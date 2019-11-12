@@ -47,27 +47,34 @@ public:
         double I = 0.15;
         double I_h = 0.0;
 
-        double v = p.coords[0];
+        double v = p.coords[2];
         double h_na = p.coords[1];
-        double m_k = p.coords[2];
+        double m_k = p.coords[0];
 
-        double I_l = -g_l*(v - E_l);
-        double I_na = -g_na * h_na * (v - E_na) * (pow((pow((1 + exp(-(v+35)/7.8)),-1)),3));
-        double I_k = -g_k * (pow(m_k,4)) * (v - E_k);
+        for(unsigned int i=0; i<11; i++) {
 
-        double v_prime = I_na + I_k + I_l + I;
+            double I_l = -g_l*(v - E_l);
+            double I_na = -g_na * h_na * (v - E_na) * (pow((pow((1 + exp(-(v+35)/7.8)),-1)),3));
+            double I_k = -g_k * (pow(m_k,4)) * (v - E_k);
 
-        double part_1 = (pow((1 + (exp((v + 55)/7))),-1)) - h_na;
-        double part_2 = 30 / (exp((v+50)/15) + exp(-(v+50)/16));
-        double h_na_prime = part_1 / part_2;
+            double v_prime = I_na + I_k + I_l + I;
 
-        part_1 = (pow((1 + (exp(-(v + 28)/15))),-1)) - m_k;
-        part_2 = 7 / (exp((v+40)/40) + exp((-v + 40)/50));
-        double m_k_prime = part_1 / part_2;
+            double part_1 = (pow((1 + (exp((v + 55)/7))),-1)) - h_na;
+            double part_2 = 30 / (exp((v+50)/15) + exp(-(v+50)/16));
+            double h_na_prime = part_1 / part_2;
 
-        p.coords[2] = m_k + (timestep)*m_k_prime;
-        p.coords[1] = h_na + (timestep)*h_na_prime;
-        p.coords[0] = v + (timestep)*v_prime;
+            part_1 = (pow((1 + (exp(-(v + 28)/15))),-1)) - m_k;
+            part_2 = 7 / (exp((v+40)/40) + exp((-v + 40)/50));
+            double m_k_prime = part_1 / part_2;
+
+            v = v + (timestep/11.0)*v_prime;
+            h_na = h_na + (timestep/11.0)*h_na_prime;
+            m_k = m_k + (timestep/11.0)*m_k_prime;
+        }
+
+        p.coords[2] = v;
+        p.coords[1] = h_na;
+        p.coords[0] = m_k;
 
     }
 
@@ -87,31 +94,27 @@ public:
                 std::vector<unsigned int> full_coord(cell_coord.size()+1);
                 for (unsigned int c=0; c<cell_coord.size(); c++)
                     full_coord[c] = cell_coord[c];
-                full_coord[cell_coord.size()] = d;
+                full_coord[num_dimensions-1] = d;
 
                 std::vector<double> base_point_coords(num_dimensions);
                 for (unsigned int j=0; j<num_dimensions; j++) {
                     base_point_coords[j] = base[j] + (full_coord[j]*(dimensions[j]/resolution[j]));
                 }
 
-                std::vector<Point> points(pow(2,num_dimensions));
-                for (unsigned int i=0; i<pow(2,num_dimensions); i++) {
-                    std::vector<double> np(num_dimensions);
-                    for (unsigned int j=0; j<num_dimensions; j++){
-                        if ((i >> j) & 1 == 1)
-                            np[j] = base_point_coords[j] + (dimensions[j]/resolution[j]);
-                        else
-                            np[j] = base_point_coords[j];
+                std::vector<Point> ps = triangulator.generateUnitCubePoints(num_dimensions);
+                for(unsigned int i=0; i<ps.size(); i++){
+                    for(unsigned int d=0; d<num_dimensions; d++){
+                        ps[i].coords[d] *= (dimensions[d]/resolution[d]);
+                        ps[i].coords[d] += base_point_coords[d];
                     }
-                    Point p = Point(np);
                     if(btranslated)
-                        applyFunctionEuler(p);
-                    points[i] = p;
+                        applyFunctionEuler(ps[i]);
                 }
+
                 if(btranslated)
-                    cells_trans.push_back(Cell(full_coord, num_dimensions, points, triangulator));
+                    cells_trans.push_back(Cell(full_coord, num_dimensions, ps, triangulator));
                 else
-                    cells.push_back(Cell(full_coord, num_dimensions, points, triangulator));
+                    cells.push_back(Cell(full_coord, num_dimensions, ps, triangulator));
             }
 
             return;
@@ -121,34 +124,36 @@ public:
             std::vector<unsigned int> full_coord(cell_coord.size()+1);
             for (unsigned int c=0; c<cell_coord.size(); c++)
                 full_coord[c] = cell_coord[c];
-            full_coord[cell_coord.size()] = d;
+            full_coord[full_coord.size()-1] = d;
             generate_cells(full_coord, res_tail, btranslated);
         }
-    }
-
-    std::vector<unsigned int> cell_index_to_coords(unsigned int index) {
-        std::vector<unsigned int> coords(num_dimensions);
-        for(unsigned int d = num_dimensions-1; d >= 0; d--) {
-            unsigned int rem = index % d;
-            coords[d] = rem;
-            index = int((index / rem) / d);
-        }
-        return coords;
     }
 
     std::vector<unsigned int> coords_to_strip_and_cell(std::vector<unsigned int> coords) {
         unsigned int index = 0;
         unsigned int multiplicand = 1;
-        for (unsigned int res : resolution) 
-            multiplicand *= res;
-        for(unsigned int d=0; d<num_dimensions-1; d++) {
-            multiplicand /= resolution[d];
-            index += int(coords[d] * multiplicand);
+
+        // MIIND expects membrane potential or the variable which receives instantaneous synaptic potentials
+        // to be the last coordinate. So we're working back to front here.
+        std::vector<unsigned int> coords_rev(num_dimensions);
+        std::vector<unsigned int> res_rev(num_dimensions);
+        for(unsigned int i=0; i < num_dimensions; i++) {
+            // coords_rev[num_dimensions-1-i] = coords[i];
+            // res_rev[num_dimensions-1-i] = resolution[i];
+            coords_rev[i] = coords[i];
+            res_rev[i] = resolution[i];
         }
-        index /= resolution[num_dimensions-1];
+
+        for (unsigned int res : res_rev) 
+            multiplicand *= res;
+        for(int d=0; d<num_dimensions-1; d++) {
+            multiplicand /= res_rev[d];
+            index += int(coords_rev[d] * multiplicand);
+        }
+        index /= res_rev[num_dimensions-1];
         std::vector<unsigned int> pair(2);
         pair[0] = index;
-        pair[1] = coords[num_dimensions-1];
+        pair[1] = coords_rev[num_dimensions-1];
         return pair;
     }
 
@@ -159,7 +164,6 @@ public:
             index += coords[c] * operand;
             operand *= resolution[c];
         }
-        std::vector<unsigned int> co = index_to_coords(index);
         return index;
     }
 
@@ -318,6 +322,30 @@ public:
                     double d = ts[kv.first];
                     ts[kv.first] *= missed_prop;
                 }
+
+                // if(cell.grid_coords[0] == 0 && cell.grid_coords[1] == 0 && cell.grid_coords[2] == 0){
+                //     for(Simplex s : cell.simplices) {
+                //         std::cout << "Simplex : \n";
+                //         for(Point p : s.points) {
+                //             std::cout << "Point : " << p.coords[0] << "," << p.coords[1] << "," << p.coords[2] << "\n";
+                //         }
+                //     }
+
+                //     for(Simplex s : cells[c].simplices) {
+                //         std::cout << "Transformed Simplex : \n";
+                //         for(Point p : s.points) {
+                //             std::cout << "Point : " << p.coords[0] << "," << p.coords[1] << "," << p.coords[2] << "\n";
+                //         }
+                //     }
+
+                //     std::cout << check_cells[0]->grid_coords[0] << "," << check_cells[0]->grid_coords[1] << "," << check_cells[0]->grid_coords[2] << "\n";
+                //     std::cout << check_cells[check_cells.size()-1]->grid_coords[0] << "," << check_cells[check_cells.size()-1]->grid_coords[1] << "," << check_cells[check_cells.size()-1]->grid_coords[2] << "\n";
+
+                //     std::vector<unsigned int> cc = {1,1,0};
+                //     std::cout << "Proportion [1,1,0] : " << ts[cc] << "\n";
+                //     return;
+                // }
+
                 transitions[cell.grid_coords] = ts;
             }
 
