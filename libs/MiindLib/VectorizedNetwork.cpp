@@ -72,7 +72,7 @@ void VectorizedNetwork::initOde2DSystem(unsigned int min_solve_steps){
 
 	for( MPILib::Index i=0; i < _grid_meshes.size(); i++){
     vector<TwoDLib::Coordinates> coords = _vec_mesh[_grid_meshes[i]].findPointInMeshSlow(TwoDLib::Point(_start_vs[i], _start_ws[i]));
-    _group->Initialize(_grid_meshes[i],coords[0][0],coords[0][1]);
+    _group->Initialize(_grid_meshes[i],coords[0][0]+500,coords[0][1]);
 
     //create CSR Matrix for each transforms
     _csrs.push_back(TwoDLib::CSRMatrix(_vec_transforms[i], *(_group), _grid_meshes[i]));

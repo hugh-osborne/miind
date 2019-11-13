@@ -4,7 +4,7 @@
 #include "Triangulator.hpp"
 
 
-std::vector<Simplex> Triangulator::chooseTriangulation(unsigned int num_dimensions, std::vector<Point>& points, std::vector<unsigned int>& lower_inds, std::vector<unsigned int>& upper_inds, std::vector<unsigned int>& hyper_inds, std::vector<unsigned int>& all_inds) {
+std::vector<Simplex> Triangulator::chooseTriangulation(unsigned int num_dimensions, std::vector<Point>& points, std::vector<unsigned int>& lower_inds, std::vector<unsigned int>& upper_inds, std::vector<unsigned int>& hyper_inds) {
 	if (lower_inds.size() == 0){
 		std::vector<Simplex> out;
 		std::vector<Point> ps(upper_inds.size());
@@ -149,8 +149,8 @@ std::vector<Point> Triangulator::generateUnitCubePoints(unsigned int num_dimensi
 		points[5] = Point(coords_5);
 		std::vector<double> coords_6(3);
 		coords_6[0] = 1.0;
-		coords_6[1] = 1.0;
-		coords_6[2] = 0.0;
+		coords_6[1] = 1.0;       
+		coords_6[2] = 0.0; 
 		points[6] = Point(coords_6);
 		std::vector<double> coords_7(3);
 		coords_7[0] = 1.0;

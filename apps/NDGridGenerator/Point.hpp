@@ -6,7 +6,6 @@
 class Point {
 public:
     std::vector<double> coords;
-    std::vector<Point*> connected;
     int lives;
     bool dead;
     bool hyper;
@@ -14,14 +13,12 @@ public:
     Point(std::vector<double> _coords) :
     coords(_coords),
     lives(0),
-    connected(0),
     dead(false),
     hyper(false) {}
 
     Point() :
     coords(0),
     lives(0),
-    connected(0),
     dead(false),
     hyper(false) {}
 
@@ -29,10 +26,6 @@ public:
         coords = std::vector<double>(other.coords.size());
         for(unsigned int i=0; i<other.coords.size(); i++)
             coords[i] = other.coords[i];
-
-        connected = std::vector<Point*>(other.connected.size());
-        for(unsigned int i=0; i<other.connected.size(); i++)
-            connected[i] = other.connected[i];
 
         lives = other.lives;
         dead = other.dead;

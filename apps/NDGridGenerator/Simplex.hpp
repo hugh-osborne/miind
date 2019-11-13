@@ -26,14 +26,6 @@ public:
             points[i] = Point(_points[i]);
         }
 
-        for (unsigned int i=0; i<points.size(); i++) {
-            points[i].connected = std::vector<Point*>(points.size()-1);
-            for (unsigned int j=0; j<points.size(); j++) {
-                if (j == i) continue;
-                points[i].connected[j] = &points[j];
-            }
-        }
-
         lines = generateLines();
     }
 
@@ -42,14 +34,6 @@ public:
     points(_points),
     lines(0),
     triangulator(_triangulator) {
-
-        for (unsigned int i=0; i<points.size(); i++) {
-            points[i].connected = std::vector<Point*>();
-            for (unsigned int j=0; j<points.size(); j++) {
-                if (j == i) continue;
-                points[i].connected.push_back(&points[j]);
-            }
-        }
 
         lines = generateLines();
     }
@@ -66,8 +50,6 @@ public:
         for(unsigned int i=0; i<other.lines.size(); i++) {
             lines[i] = other.lines[i];
         }
-
-
     }
 
     Simplex& operator=(const Simplex &other) {
@@ -140,9 +122,11 @@ public:
 
         std::vector<Point*> lower;
         std::vector<Point*> upper;
+        std::vector<Point*> equal;
         for (unsigned int i=0; i<points.size(); i++) {
             if(points[i].coords[dim_index] < dim - eps) lower.push_back(&points[i]);
-            if(points[i].coords[dim_index] > dim + eps) upper.push_back(&points[i]);
+            else if(points[i].coords[dim_index] > dim + eps) upper.push_back(&points[i]);
+            else equal.push_back(&points[i]);
         }
 
         std::vector<Point> p_outs;
@@ -154,17 +138,8 @@ public:
                     coords[i] = p0->coords[i] + ((p1->coords[i] - p0->coords[i])*t);
                 }
                 Point np(coords);
-                std::vector<Point*> cs(2);
-                cs[0] = p0;
-                cs[1] = p1;
-                np.connected = cs;
-                for (Point* p : p0->connected)
-                    if (*p == *p1) p = &np;
-                for (Point* p : p1->connected)
-                    if (*p == *p0) p = &np;
                 np.hyper = true;
                 p_outs.push_back(np);
-
             }
         }
 
@@ -190,39 +165,27 @@ public:
         }
 
         unsigned int index = 0;
-        std::vector<unsigned int> i_all(lower.size()+upper.size()+p_outs.size());
         std::vector<unsigned int> i_less(lower.size());
         for (unsigned int i=0; i<lower.size(); i++) {
             i_less[i] = i + index;
-            i_all[index+i] = i + index;
         }
         index += lower.size();
 
         std::vector<unsigned int> i_greater(upper.size());
         for (unsigned int i=0; i<upper.size(); i++) {
             i_greater[i] = i + index;
-            i_all[index+i] = i + index;
         } 
         index += upper.size();
 
         std::vector<unsigned int> i_hyp(p_outs.size());
         for (unsigned int i=0; i<p_outs.size(); i++) {
             i_hyp[i] = i + index;
-            i_all[index+i] = i + index;
         } 
         index += p_outs.size();
-
-        std::vector<Point*> p_equal;
-        for (Point p : points) {
-            if (p.coords[dim_index] <= dim + eps && p.coords[dim_index] >= dim - eps) {
-                p_equal.push_back(&p);
-            }
-            
-        }
         
-        for (unsigned int i=0; i<p_equal.size(); i++) i_hyp.push_back(i + index);
+        for (unsigned int i=0; i<equal.size(); i++) i_hyp.push_back(i + index);
 
-        std::vector<Point> p_total(lower.size()+upper.size()+p_outs.size()+p_equal.size());
+        std::vector<Point> p_total(lower.size()+upper.size()+p_outs.size()+equal.size());
         for(unsigned int i=0; i<lower.size(); i++){
             p_total[i] = *(lower[i]);
         }
@@ -232,11 +195,11 @@ public:
         for(unsigned int i=0; i<p_outs.size(); i++){
             p_total[lower.size()+upper.size()+i] = p_outs[i];
         }
-        for(unsigned int i=0; i<p_equal.size(); i++){
-            p_total[lower.size()+upper.size()+p_outs.size()+i] = *(p_equal[i]);
+        for(unsigned int i=0; i<equal.size(); i++){
+            p_total[lower.size()+upper.size()+p_outs.size()+i] = *(equal[i]);
         }
 
-        std::vector<Simplex> simplices = triangulator.chooseTriangulation(num_dimensions, p_total, i_less, i_greater, i_hyp, i_all);
+        std::vector<Simplex> simplices = triangulator.chooseTriangulation(num_dimensions, p_total, i_less, i_greater, i_hyp);
 
         std::vector<Simplex> less;
         std::vector<Simplex> greater;

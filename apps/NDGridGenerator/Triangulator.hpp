@@ -141,7 +141,7 @@ public:
 	}
 
 
-	std::vector<Simplex> chooseTriangulation(unsigned int num_dimensions, std::vector<Point>& points, std::vector<unsigned int>& lower_inds, std::vector<unsigned int>& upper_inds, std::vector<unsigned int>& hyper_inds, std::vector<unsigned int>& all_inds);
+	std::vector<Simplex> chooseTriangulation(unsigned int num_dimensions, std::vector<Point>& points, std::vector<unsigned int>& lower_inds, std::vector<unsigned int>& upper_inds, std::vector<unsigned int>& hyper_inds);
 	std::vector<Simplex> generateCellSimplices(unsigned int num_dimensions, std::vector<Point>& points);
 	std::vector<Point> generateUnitCubePoints(unsigned int num_dimensions);
 };

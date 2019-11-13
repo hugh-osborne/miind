@@ -35,7 +35,7 @@ public:
 
     // obviously this constrains the number of dimensions to a hard coded 3.
     // need to pass the function as a parameter to the class. Can't be bothered right now.
-    void applyFunctionEuler(Point& p) {
+    void applyRybakInterneuronEuler(Point& p) {
         double g_nap = 0.25;
         double g_na = 30.0;
         double g_k = 6.0;
@@ -78,6 +78,38 @@ public:
 
     }
 
+    void applyHindmarshRoseEuler(Point& p) {
+        double a = 1.0;
+        double b = 3.0;
+        double c = 1.0;
+        double d = 5.0;
+        double r = 0.002;
+        double s = 4.0;
+        double x_R = -1.6;
+        double I = 0.0;
+        double I_h = 0.0;
+
+        double x = p.coords[2];
+        double y = p.coords[1];
+        double z = p.coords[0];
+
+        for(unsigned int i=0; i<11; i++) {
+
+            double x_prime = y + (-a*pow(x,3) + b*pow(x,2)) - z + I;
+            double y_prime = c - (d*pow(x,2)) - y;
+            double z_prime = r*(s*(x - x_R) - z);
+            
+            x = x + (timestep/11.0)*x_prime;
+            y = y + (timestep/11.0)*y_prime;
+            z = z + (timestep/11.0)*z_prime;
+        }
+
+        p.coords[2] = x;
+        p.coords[1] = y;
+        p.coords[0] = z;
+
+    }
+
     void generate_cells(std::vector<unsigned int> cell_coord, std::vector<unsigned int> res, bool btranslated) {
         unsigned int res_head = res[0];
 
@@ -108,7 +140,7 @@ public:
                         ps[i].coords[d] += base_point_coords[d];
                     }
                     if(btranslated)
-                        applyFunctionEuler(ps[i]);
+                        applyHindmarshRoseEuler(ps[i]);
                 }
 
                 if(btranslated)
@@ -227,6 +259,7 @@ public:
     }
 
     std::vector<Cell*> getCellRange(Cell& tcell) {
+
         std::vector<double> max = tcell.simplices[0].points[0].coords;
         std::vector<double> min = tcell.simplices[0].points[0].coords;
 
@@ -300,9 +333,9 @@ public:
 
         file << "0\t0\n";
 
-        std::map<std::vector<unsigned int> ,std::map<std::vector<unsigned int>, double>> transitions;    
+        std::map<std::vector<unsigned int> ,std::map<std::vector<unsigned int>, double>> transitions;  
         for (unsigned int batch=0; batch < cells_trans.size() / batch_size; batch++) {
-
+#pragma omp parallel for
             for (unsigned int c=(batch*batch_size); c < (batch*batch_size)+batch_size; c++) {
                 Cell cell = cells_trans[c];
                 std::vector<Cell*> check_cells = getCellRange(cell);
@@ -322,30 +355,7 @@ public:
                     double d = ts[kv.first];
                     ts[kv.first] *= missed_prop;
                 }
-
-                // if(cell.grid_coords[0] == 0 && cell.grid_coords[1] == 0 && cell.grid_coords[2] == 0){
-                //     for(Simplex s : cell.simplices) {
-                //         std::cout << "Simplex : \n";
-                //         for(Point p : s.points) {
-                //             std::cout << "Point : " << p.coords[0] << "," << p.coords[1] << "," << p.coords[2] << "\n";
-                //         }
-                //     }
-
-                //     for(Simplex s : cells[c].simplices) {
-                //         std::cout << "Transformed Simplex : \n";
-                //         for(Point p : s.points) {
-                //             std::cout << "Point : " << p.coords[0] << "," << p.coords[1] << "," << p.coords[2] << "\n";
-                //         }
-                //     }
-
-                //     std::cout << check_cells[0]->grid_coords[0] << "," << check_cells[0]->grid_coords[1] << "," << check_cells[0]->grid_coords[2] << "\n";
-                //     std::cout << check_cells[check_cells.size()-1]->grid_coords[0] << "," << check_cells[check_cells.size()-1]->grid_coords[1] << "," << check_cells[check_cells.size()-1]->grid_coords[2] << "\n";
-
-                //     std::vector<unsigned int> cc = {1,1,0};
-                //     std::cout << "Proportion [1,1,0] : " << ts[cc] << "\n";
-                //     return;
-                // }
-
+#pragma omp critical
                 transitions[cell.grid_coords] = ts;
             }
 
