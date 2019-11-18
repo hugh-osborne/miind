@@ -108,6 +108,12 @@ void Display::display(void) {
 	if (_dws.size() == 0)
 		return;
 
+	static unsigned int num_frames = 0;
+
+	// lets go a bit faster in our rendering eh?
+	if(num_frames++ % 5 != 0)
+		return;
+
 	static float rot = 0.0;
 
 	milliseconds real_time = duration_cast< milliseconds >(
@@ -271,7 +277,9 @@ void Display::display(void) {
 	double y_pos = 0.0;
 	double z_pos = -1.0;
 
-	unsigned int size = 50;
+	unsigned int size_x = 100;
+	unsigned int size_y = 100;
+	unsigned int size_z = 100;
 
 	std::vector<std::vector<double>> world_scale = {{x_scale,0.0,0.0,0.0},{0.0,y_scale,0.0,0.0},{0.0,0.0,z_scale,0.0},{0.0,0.0,0.0,1.0}};
 	std::vector<std::vector<double>> world_x_rotation = {{1.0,0.0,0.0,0.0},{0.0,cos(rot_x_angle),sin(rot_x_angle),0.0},{0.0,-sin(rot_x_angle),cos(rot_x_angle),0.0},{0.0,0.0,0.0,1.0}};
@@ -279,11 +287,11 @@ void Display::display(void) {
 	std::vector<std::vector<double>> world_translate = {{1.0,0.0,0.0,x_pos},{0.0,1.0,0.0,y_pos},{0.0,0.0,1.0,z_pos},{0.0,0.0,0.0,1.0}};
 
 	double max_mass = 0.0;
-	for(unsigned int i = 0; i<size; i++){
-		for(unsigned int k = 0; k<size; k++){
+	for(unsigned int i = 0; i<size_z; i++){
+		for(unsigned int k = 0; k<size_y; k++){
 			for(unsigned int j = 0; j<m.NrCellsInStrip(i); j++) {
-				unsigned int idx = _dws[window_index]._system->Map(_dws[window_index]._mesh_index,(k*size)+i,j);
-				if (i != 0 && k != 0 && j != 0 && i != size-1 && k != size-1 && j != size-1)
+				unsigned int idx = _dws[window_index]._system->Map(_dws[window_index]._mesh_index,(i*size_y)+k,j);
+				if (i != 0 && k != 0 && j != 0 && i != size_z-1 && k != size_y-1 && j != size_x-1)
 					if (_dws[window_index]._system->Mass()[idx] == 0) continue; // skip if mass is basically nothing
 
 				double cell_area = std::abs(m.Quad(0,0).SignedArea());
@@ -291,19 +299,20 @@ void Display::display(void) {
 				if (cell_area != 0 && _dws[window_index]._system->Mass()[idx] > 0.0)
 					mass = (log10(_dws[window_index]._system->Mass()[idx]/cell_area) - min) / (max-min);
 
-				if (i == 0 || k == 0 || j == 0 || i == size-1 || k == size-1 || j == size-1)
+				if (i == 0 || k == 0 || j == 0 || i == size_z-1 || k == size_y-1 || j == size_x-1) {
 					glColor4f(1.0, 1.0, 1.0, 0.01);
-				else
+				} else {
+					if (mass < 0.00000001) continue;
 					glColor4f(std::min(1.0,mass*2.0), std::max(0.0,((mass*2.0) - 1.0)), 0, mass);
+				}
 
+				double cell_x = -0.5 + j*(1.0/size_x);
+				double cell_y = -0.5 + i*(1.0/size_z);
+				double cell_z = -0.5 + k*(1.0/size_y);
 
-				double cell_x = -0.5 + j*(1.0/size);
-				double cell_y = -0.5 + i*(1.0/size);
-				double cell_z = -0.5 + k*(1.0/size);
-
-				double half_cell_x_width = 0.95*(0.5/size);
-				double half_cell_y_width = 0.95*(0.5/size);
-				double half_cell_z_width = 0.95*(0.5/size);
+				double half_cell_x_width = 0.95*(0.5/size_x);
+				double half_cell_y_width = 0.95*(0.5/size_z);
+				double half_cell_z_width = 0.95*(0.5/size_y);
 
 				std::vector<double> p1 = {cell_x - half_cell_x_width, cell_y - half_cell_y_width, cell_z + half_cell_z_width, 1.0};
 				std::vector<double> p2 = {cell_x - half_cell_x_width, cell_y + half_cell_y_width, cell_z + half_cell_z_width, 1.0};
@@ -389,6 +398,112 @@ void Display::display(void) {
 			}
 		}
 	}
+
+	//3D individuals
+
+	// for(unsigned int idx : _dws[window_index]._system->_individuals){
+
+	// 	double cell_area = std::abs(m.Quad(0,0).SignedArea());
+	// 	double mass = 0.0;
+	// 	if (cell_area != 0 && _dws[window_index]._system->Mass()[idx] > 0.0)
+	// 		mass = (log10(_dws[window_index]._system->Mass()[idx]/cell_area) - min) / (max-min);
+
+	// 	glColor4f(std::min(1.0,mass*2.0), std::max(0.0,((mass*2.0) - 1.0)), 0, mass);
+
+	// 	unsigned int j = (idx % 200);
+	// 	unsigned int i = (idx - (idx % 200)) / (200);
+	// 	unsigned int k = (idx - (idx % 200)) / (200*200);
+
+	// 	double cell_x = -0.5 + j*(1.0/size_x);
+	// 	double cell_y = -0.5 + i*(1.0/size_z);
+	// 	double cell_z = -0.5 + k*(1.0/size_y);
+
+	// 	double half_cell_x_width = 0.95*(0.5/size_x);
+	// 	double half_cell_y_width = 0.95*(0.5/size_z);
+	// 	double half_cell_z_width = 0.95*(0.5/size_y);
+
+	// 	std::vector<double> p1 = {cell_x - half_cell_x_width, cell_y - half_cell_y_width, cell_z + half_cell_z_width, 1.0};
+	// 	std::vector<double> p2 = {cell_x - half_cell_x_width, cell_y + half_cell_y_width, cell_z + half_cell_z_width, 1.0};
+	// 	std::vector<double> p3 = {cell_x + half_cell_x_width, cell_y + half_cell_y_width, cell_z + half_cell_z_width, 1.0};
+	// 	std::vector<double> p4 = {cell_x + half_cell_x_width, cell_y - half_cell_y_width, cell_z + half_cell_z_width, 1.0};
+	// 	std::vector<double> p5 = {cell_x - half_cell_x_width, cell_y - half_cell_y_width, cell_z - half_cell_z_width, 1.0};
+	// 	std::vector<double> p6 = {cell_x - half_cell_x_width, cell_y + half_cell_y_width, cell_z - half_cell_z_width, 1.0};
+	// 	std::vector<double> p7 = {cell_x + half_cell_x_width, cell_y + half_cell_y_width, cell_z - half_cell_z_width, 1.0};
+	// 	std::vector<double> p8 = {cell_x + half_cell_x_width, cell_y - half_cell_y_width, cell_z - half_cell_z_width, 1.0};
+
+	// 	p1 = mat_mult(world_scale, p1);
+	// 	p2 = mat_mult(world_scale, p2);
+	// 	p3 = mat_mult(world_scale, p3);
+	// 	p4 = mat_mult(world_scale, p4);
+	// 	p5 = mat_mult(world_scale, p5);
+	// 	p6 = mat_mult(world_scale, p6);
+	// 	p7 = mat_mult(world_scale, p7);
+	// 	p8 = mat_mult(world_scale, p8);
+
+	// 	p1 = mat_mult(world_y_rotation, p1);
+	// 	p2 = mat_mult(world_y_rotation, p2);
+	// 	p3 = mat_mult(world_y_rotation, p3);
+	// 	p4 = mat_mult(world_y_rotation, p4);
+	// 	p5 = mat_mult(world_y_rotation, p5);
+	// 	p6 = mat_mult(world_y_rotation, p6);
+	// 	p7 = mat_mult(world_y_rotation, p7);
+	// 	p8 = mat_mult(world_y_rotation, p8);
+
+	// 	p1 = mat_mult(world_x_rotation, p1);
+	// 	p2 = mat_mult(world_x_rotation, p2);
+	// 	p3 = mat_mult(world_x_rotation, p3);
+	// 	p4 = mat_mult(world_x_rotation, p4);
+	// 	p5 = mat_mult(world_x_rotation, p5);
+	// 	p6 = mat_mult(world_x_rotation, p6);
+	// 	p7 = mat_mult(world_x_rotation, p7);
+	// 	p8 = mat_mult(world_x_rotation, p8);
+
+	// 	p1 = mat_mult(world_translate, p1);
+	// 	p2 = mat_mult(world_translate, p2);
+	// 	p3 = mat_mult(world_translate, p3);
+	// 	p4 = mat_mult(world_translate, p4);
+	// 	p5 = mat_mult(world_translate, p5);
+	// 	p6 = mat_mult(world_translate, p6);
+	// 	p7 = mat_mult(world_translate, p7);
+	// 	p8 = mat_mult(world_translate, p8);
+
+	// 	// front face bad
+	// 	glVertex3f(p1[0], p1[1], p1[2]);
+	// 	glVertex3f(p2[0], p2[1], p2[2]);
+	// 	glVertex3f(p3[0], p3[1], p3[2]);
+	// 	glVertex3f(p4[0], p4[1], p4[2]);
+
+	// 	// back face bad
+	// 	glVertex3f(p5[0], p5[1], p5[2]);
+	// 	glVertex3f(p6[0], p6[1], p6[2]);
+	// 	glVertex3f(p7[0], p7[1], p7[2]);
+	// 	glVertex3f(p8[0], p8[1], p8[2]);
+
+	// 	// right face
+	// 	glVertex3f(p4[0], p4[1], p4[2]);
+	// 	glVertex3f(p3[0], p3[1], p3[2]);
+	// 	glVertex3f(p7[0], p7[1], p7[2]);
+	// 	glVertex3f(p8[0], p8[1], p8[2]);
+
+	// 	// left face
+	// 	glVertex3f(p1[0], p1[1], p1[2]);
+	// 	glVertex3f(p2[0], p2[1], p2[2]);
+	// 	glVertex3f(p6[0], p6[1], p6[2]);
+	// 	glVertex3f(p5[0], p5[1], p5[2]);
+
+	// 	// top face good
+	// 	glVertex3f(p2[0], p2[1], p2[2]);
+	// 	glVertex3f(p6[0], p6[1], p6[2]);
+	// 	glVertex3f(p7[0], p7[1], p7[2]);
+	// 	glVertex3f(p3[0], p3[1], p3[2]);
+
+	// 	// bottom face
+	// 	glVertex3f(p1[0], p1[1], p1[2]);
+	// 	glVertex3f(p5[0], p5[1], p5[2]);
+	// 	glVertex3f(p8[0], p8[1], p8[2]);
+	// 	glVertex3f(p4[0], p4[1], p4[2]);
+
+	// }
 
 	glEnd();
 

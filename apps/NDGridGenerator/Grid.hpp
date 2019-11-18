@@ -6,6 +6,7 @@
 #include <iostream>
 #include <fstream>
 #include <omp.h>
+#include <iomanip>
 
 class Grid {
 public:
@@ -17,8 +18,7 @@ public:
     std::vector<double> dimensions;
     std::vector<unsigned int> resolution;
     std::vector<double> base;
-    std::vector<Cell> cells;
-    std::vector<Cell> cells_trans;
+    std::vector<std::vector<unsigned int>> coord_list;
 
     Grid(std::vector<double> _base, std::vector<double> _dims, std::vector<unsigned int> _res, double _threshold_v, double _reset_v, double _timestep):
     base(_base),
@@ -29,8 +29,7 @@ public:
     timestep(_timestep) {
         num_dimensions = _dims.size();
 
-        generate_cells(std::vector<unsigned int>(), resolution, false);
-        generate_cells(std::vector<unsigned int>(), resolution, true);
+        generate_cell_coords(std::vector<unsigned int>(), resolution);
     }
 
     // obviously this constrains the number of dimensions to a hard coded 3.
@@ -44,7 +43,7 @@ public:
         double C = 1.0;
         double g_l = 0.1;
         double E_l = -64.0;
-        double I = 0.15;
+        double I = 3.4;
         double I_h = 0.0;
 
         double v = p.coords[2];
@@ -86,7 +85,7 @@ public:
         double r = 0.002;
         double s = 4.0;
         double x_R = -1.6;
-        double I = 0.0;
+        double I = 3.14;
         double I_h = 0.0;
 
         double x = p.coords[2];
@@ -110,7 +109,26 @@ public:
 
     }
 
-    void generate_cells(std::vector<unsigned int> cell_coord, std::vector<unsigned int> res, bool btranslated) {
+    Cell generate_cell_with_coords(std::vector<unsigned int> cell_coord, bool btranslated) {
+        std::vector<double> base_point_coords(num_dimensions);
+        for (unsigned int j=0; j<num_dimensions; j++) {
+            base_point_coords[j] = base[j] + (cell_coord[j]*(dimensions[j]/resolution[j]));
+        }
+
+        std::vector<Point> ps = triangulator.generateUnitCubePoints(num_dimensions);
+        for(unsigned int i=0; i<ps.size(); i++){
+            for(unsigned int d=0; d<num_dimensions; d++){
+                ps[i].coords[d] *= (dimensions[d]/resolution[d]);
+                ps[i].coords[d] += base_point_coords[d];
+            }
+            if(btranslated)
+                applyHindmarshRoseEuler(ps[i]);
+        }
+
+        return Cell(cell_coord, num_dimensions, ps, triangulator);
+    }
+
+    void generate_cell_coords(std::vector<unsigned int> cell_coord, std::vector<unsigned int> res) {
         unsigned int res_head = res[0];
 
         if (res.size() < 1) // We don't work with 1D
@@ -128,25 +146,7 @@ public:
                     full_coord[c] = cell_coord[c];
                 full_coord[num_dimensions-1] = d;
 
-                std::vector<double> base_point_coords(num_dimensions);
-                for (unsigned int j=0; j<num_dimensions; j++) {
-                    base_point_coords[j] = base[j] + (full_coord[j]*(dimensions[j]/resolution[j]));
-                }
-
-                std::vector<Point> ps = triangulator.generateUnitCubePoints(num_dimensions);
-                for(unsigned int i=0; i<ps.size(); i++){
-                    for(unsigned int d=0; d<num_dimensions; d++){
-                        ps[i].coords[d] *= (dimensions[d]/resolution[d]);
-                        ps[i].coords[d] += base_point_coords[d];
-                    }
-                    if(btranslated)
-                        applyHindmarshRoseEuler(ps[i]);
-                }
-
-                if(btranslated)
-                    cells_trans.push_back(Cell(full_coord, num_dimensions, ps, triangulator));
-                else
-                    cells.push_back(Cell(full_coord, num_dimensions, ps, triangulator));
+                coord_list.push_back(full_coord);
             }
 
             return;
@@ -157,7 +157,7 @@ public:
             for (unsigned int c=0; c<cell_coord.size(); c++)
                 full_coord[c] = cell_coord[c];
             full_coord[full_coord.size()-1] = d;
-            generate_cells(full_coord, res_tail, btranslated);
+            generate_cell_coords(full_coord, res_tail);
         }
     }
 
@@ -232,13 +232,13 @@ public:
         return coords;
     }
 
-    void buildCellRange(std::vector<Cell*>& cell_ptrs, std::vector<unsigned int> base_min, std::vector<unsigned int> max_coords, std::vector<unsigned int> min_coords) {
+    void buildCellRange(std::vector<Cell>& cell_ptrs, std::vector<unsigned int> base_min, std::vector<unsigned int> max_coords, std::vector<unsigned int> min_coords) {
 
         if (max_coords.size() == 1) {
             for(unsigned int i=0; i<(max_coords[0] - min_coords[0])+1; i++) {
                 std::vector<unsigned int> nb = base_min;
                 nb.push_back(min_coords[0] + i);
-                cell_ptrs.push_back(&cells[coords_to_index(nb)]);
+                cell_ptrs.push_back(generate_cell_with_coords(nb, false));
             }
         } else  if (max_coords.size() > 1) {
             for(unsigned int i=0; i<(max_coords[0] - min_coords[0])+1; i++){
@@ -258,7 +258,7 @@ public:
         }
     }
 
-    std::vector<Cell*> getCellRange(Cell& tcell) {
+    std::vector<Cell> getCellRange(Cell& tcell) {
 
         std::vector<double> max = tcell.simplices[0].points[0].coords;
         std::vector<double> min = tcell.simplices[0].points[0].coords;
@@ -280,19 +280,19 @@ public:
         std::vector<unsigned int> max_coords = getCellCoordsForPoint(p_max);
         std::vector<unsigned int> min_coords = getCellCoordsForPoint(p_min);
 
-        std::vector<Cell*> cells;
+        std::vector<Cell> cells;
         buildCellRange(cells, std::vector<unsigned int>(), max_coords, min_coords);
         return cells;
     }
     
     std::map<std::vector<unsigned int>,double>
-    calculateTransitionForCell(Cell& tcell, std::vector<Cell*> cell_range) {
+    calculateTransitionForCell(Cell& tcell, std::vector<Cell>& cell_range) {
         std::map<std::vector<unsigned int>,double> t;
-        for(Cell* check_cell : cell_range) {
-            double prop = tcell.intersectsWith(*check_cell);
+        for(Cell check_cell : cell_range) {
+            double prop = tcell.intersectsWith(check_cell);
             if (prop == 0)
                 continue;
-            t[check_cell->grid_coords] = prop;
+            t[check_cell.grid_coords] = prop;
         } 
         return t;
     }
@@ -300,9 +300,9 @@ public:
     std::map<std::vector<unsigned int> ,std::map<std::vector<unsigned int>, double>> calculateTransitionMatrix() {  
         std::map<std::vector<unsigned int> ,std::map<std::vector<unsigned int>, double>> transitions;    
 #pragma omp parallel for
-        for (unsigned int c=0; c < cells_trans.size(); c++) {
-            Cell cell = cells_trans[c];
-            std::vector<Cell*> check_cells = getCellRange(cell);
+        for (unsigned int c=0; c < coord_list.size(); c++) {
+            Cell cell = generate_cell_with_coords(coord_list[c],true);
+            std::vector<Cell> check_cells = getCellRange(cell);
             std::map<std::vector<unsigned int>, double> ts = calculateTransitionForCell(cell, check_cells);
 
             if (ts.size() == 0) { // cell was completely outside the grid, so don't move it.
@@ -334,11 +334,11 @@ public:
         file << "0\t0\n";
 
         std::map<std::vector<unsigned int> ,std::map<std::vector<unsigned int>, double>> transitions;  
-        for (unsigned int batch=0; batch < cells_trans.size() / batch_size; batch++) {
+        for (unsigned int batch=0; batch < coord_list.size() / batch_size; batch++) {
 #pragma omp parallel for
             for (unsigned int c=(batch*batch_size); c < (batch*batch_size)+batch_size; c++) {
-                Cell cell = cells_trans[c];
-                std::vector<Cell*> check_cells = getCellRange(cell);
+                Cell cell = generate_cell_with_coords(coord_list[c],true);
+                std::vector<Cell> check_cells = getCellRange(cell);
                 std::map<std::vector<unsigned int>, double> ts = calculateTransitionForCell(cell, check_cells);
 
                 if (ts.size() == 0) { // cell was completely outside the grid, so don't move it.
@@ -369,9 +369,10 @@ public:
                 file << "\n";
             }
 
-            std::cout << batch*batch_size << " complete.\n";
+            std::cout << '\r' << std::setw(5) << 100.0 * ((float)(batch*batch_size)/(float)coord_list.size()) << "% complete." << std::setfill(' ') << std::flush;
             transitions.clear();
         }
+        std::cout << "\n";
     }
 
     void generateTMatFileLowMemory(std::string basename) {
@@ -380,10 +381,11 @@ public:
 
         file << "0\t0\n";
         unsigned int num_lines = 0;
-        for(Cell cell : cells_trans) {
+        for(std::vector<unsigned int> c : coord_list) {
+            Cell cell = generate_cell_with_coords(c,true);
             std::vector<unsigned int> pair = coords_to_strip_and_cell(cell.grid_coords);
             file << "1000000000;" << pair[0] << "," << pair[1] << ";";
-            std::vector<Cell*> check_cells = getCellRange(cell);
+            std::vector<Cell> check_cells = getCellRange(cell);
             std::map<std::vector<unsigned int>, double> ts = calculateTransitionForCell(cell, check_cells);
 
             if (ts.size() == 0) { // cell was completely outside the grid, so don't move it.

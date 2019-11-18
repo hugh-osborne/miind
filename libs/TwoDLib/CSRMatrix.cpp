@@ -122,8 +122,8 @@ void CSRMatrix::Validate(const TransitionMatrix& mat){
 		}
 	}
 
-	if ( count != m.NrCellsInStrip(0) )
-	   throw TwoDLib::TwoDLibException("There is a stationary point in your mesh file, but no entries in the mat file that lead away from it.");
+	// if ( count != m.NrCellsInStrip(0) )
+	//    throw TwoDLib::TwoDLibException("There is a stationary point in your mesh file, but no entries in the mat file that lead away from it.");
 
 }
 

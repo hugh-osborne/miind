@@ -78,12 +78,22 @@ class Density(Result):
         if os.path.exists(self.display_images_path):
             gen_images = False
             image_path = self.display_images_path
-            extension = '%d.tga'
+            extension = '*.tga'
 
             try:
                 # grab all the filenames
                 files = glob.glob(op.join(image_path, extension))
                 files.sort()
+
+                count = 0
+                correct_count = 0
+                while correct_count < len(files):
+                    if op.exists(op.join(image_path, '{}.tga'.format(count))):
+                        os.rename(op.join(image_path, '{}.tga'.format(count)), op.join(image_path, '{}.tga'.format(correct_count)))
+                        correct_count += 1
+                    count += 1
+
+                extension = '%d.tga'
 
                 # note ffmpeg must be installed
                 process = ['ffmpeg',
