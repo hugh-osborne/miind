@@ -109,6 +109,46 @@ public:
 
     }
 
+    void applyMauritzioExEuler(Point& p) {
+
+        double C_m = 281.0;
+        double g_L = 30.0;
+        double t_ref = 2.0;
+        double E_L = -70.6;
+        double V_reset = -70.6;
+        double E_ex = 0.0;
+        double E_in = -75.0;
+        double tau_syn_ex = 34.78;
+        double tau_syn_in = 8.28;
+        double a = 0.0;
+        double b = 0.0;
+        double Delta_T = 2.0;
+        double tau_w = 0.0;
+        double V_th = -50.4;
+        double V_peak = -40.4;
+        double I_e = 60.0;
+
+        double V_m = p.coords[2];
+        double g_e = p.coords[1];
+        double g_i = p.coords[0];
+
+        for(unsigned int i=0; i<11; i++) {
+            double w = 0.0; // both tau_w and a are 0, so there is no adaptation.
+            double V_m_prime = (-(g_L*(V_m-E_L))+g_L*Delta_T*exp((V_m-V_th)/Delta_T)-(g_e*(V_m-E_ex)) -(g_i*(V_m-E_in))-w +I_e) / C_m;
+            double g_e_prime = (-g_e/tau_syn_ex);
+            double g_i_prime = (-g_i/tau_syn_in);
+            
+            V_m = V_m + (timestep/11.0)*V_m_prime;
+            g_e = g_e + (timestep/11.0)*g_e_prime;
+            g_i = g_i + (timestep/11.0)*g_i_prime;
+        }
+
+        p.coords[2] = V_m;
+        p.coords[1] = g_e;
+        p.coords[0] = g_i;
+
+    }
+
     Cell generate_cell_with_coords(std::vector<unsigned int> cell_coord, bool btranslated) {
         std::vector<double> base_point_coords(num_dimensions);
         for (unsigned int j=0; j<num_dimensions; j++) {
