@@ -109,6 +109,43 @@ public:
 
     }
 
+    void applyConductance3D(Point& p) {
+        double tau_m = 20e-3;
+        double E_r = -65e-3;
+        double E_e = 0.0;
+        double tau_s = 5e-3;
+        double tau_t = 5e-3;
+        double g_max = 0.8;
+        double V_min = -66e-3;
+        double V_max = -55e-3;
+        double V_th = -55e-3;
+        double N_V = 2000;
+        double w_min = 0.0;
+        double w_max = 10.0;
+        double N_w = 20.0;
+        double u_min = 0.0;
+        double u_max = 10.0;
+        double N_u = 20.0;
+
+        double v = p.coords[2];
+        double w = p.coords[1];
+        double u = p.coords[0];
+
+        for(unsigned int i=0; i<11; i++) {
+            double v_prime = (-(v-E_r) - w*(v-E_e) - u*(v-E_e))/tau_m;
+            double w_prime = -w/tau_s;
+            double u_prime = -u/tau_t;
+            
+            v = v + (timestep/11.0)*v_prime;
+            w = w + (timestep/11.0)*w_prime;
+            u = u + (timestep/11.0)*u_prime;
+        }
+
+        p.coords[2] = v;
+        p.coords[1] = w;
+        p.coords[0] = u;
+    }
+
     void applyMauritzioExEuler(Point& p) {
 
         double C_m = 281.0;
@@ -132,15 +169,61 @@ public:
         double g_e = p.coords[1];
         double g_i = p.coords[0];
 
-        for(unsigned int i=0; i<11; i++) {
+        for(unsigned int i=0; i<100; i++) {
+            if(V_m > -30.0)
+                V_m = -30.0;
+
             double w = 0.0; // both tau_w and a are 0, so there is no adaptation.
             double V_m_prime = (-(g_L*(V_m-E_L))+g_L*Delta_T*exp((V_m-V_th)/Delta_T)-(g_e*(V_m-E_ex)) -(g_i*(V_m-E_in))-w +I_e) / C_m;
-            double g_e_prime = (-g_e/tau_syn_ex);
-            double g_i_prime = (-g_i/tau_syn_in);
+            double g_e_prime = (-g_e/tau_syn_ex);// + (2870.249*0.001*0.1);
+            double g_i_prime = (-g_i/tau_syn_in);// + (245.329*0.001*1.2671875);
             
-            V_m = V_m + (timestep/11.0)*V_m_prime;
-            g_e = g_e + (timestep/11.0)*g_e_prime;
-            g_i = g_i + (timestep/11.0)*g_i_prime;
+            V_m = V_m + (timestep/100.0)*V_m_prime;
+            g_e = g_e + (timestep/100.0)*g_e_prime;
+            g_i = g_i + (timestep/100.0)*g_i_prime;
+        }
+
+        p.coords[2] = V_m;
+        p.coords[1] = g_e;
+        p.coords[0] = g_i;
+
+    }
+
+    void applyMauritzioInEuler(Point& p) {
+
+        double C_m = 281.0;
+        double g_L = 30.0;
+        double t_ref = 1.0;
+        double E_L = -70.6;
+        double V_reset = -70.6;
+        double E_ex = 0.0;
+        double E_in = -75.0;
+        double tau_syn_ex = 26.55;
+        double tau_syn_in = 8.28;
+        double a = 0.0;
+        double b = 0.0;
+        double Delta_T = 2.0;
+        double tau_w = 0.0;
+        double V_th = -50.4;
+        double V_peak = -40.4;
+        double I_e = 0.0;
+
+        double V_m = p.coords[2];
+        double g_e = p.coords[1];
+        double g_i = p.coords[0];
+
+        for(unsigned int i=0; i<100; i++) {
+            if(V_m > -30.0)
+                V_m = -30.0;
+
+            double w = 0.0; // both tau_w and a are 0, so there is no adaptation.
+            double V_m_prime = (-(g_L*(V_m-E_L))+g_L*Delta_T*exp((V_m-V_th)/Delta_T)-(g_e*(V_m-E_ex)) -(g_i*(V_m-E_in))-w +I_e) / C_m;
+            double g_e_prime = (-g_e/tau_syn_ex);// + (733.4874*0.001*0.4875);
+            double g_i_prime = (-g_i/tau_syn_in);// + (86.1246*0.001*1.2671875);
+            
+            V_m = V_m + (timestep/100.0)*V_m_prime;
+            g_e = g_e + (timestep/100.0)*g_e_prime;
+            g_i = g_i + (timestep/100.0)*g_i_prime;
         }
 
         p.coords[2] = V_m;
@@ -162,7 +245,7 @@ public:
                 ps[i].coords[d] += base_point_coords[d];
             }
             if(btranslated)
-                applyHindmarshRoseEuler(ps[i]);
+                applyMauritzioInEuler(ps[i]);
         }
 
         return Cell(cell_coord, num_dimensions, ps, triangulator);
@@ -328,11 +411,17 @@ public:
     std::map<std::vector<unsigned int>,double>
     calculateTransitionForCell(Cell& tcell, std::vector<Cell>& cell_range) {
         std::map<std::vector<unsigned int>,double> t;
+        unsigned int threshold_cell = int((threshold_v - base[num_dimensions-1]) / (dimensions[num_dimensions-1] / resolution[num_dimensions-1]));
         for(Cell check_cell : cell_range) {
             double prop = tcell.intersectsWith(check_cell);
             if (prop == 0)
                 continue;
-            t[check_cell.grid_coords] = prop;
+            if (check_cell.grid_coords[num_dimensions-1] > threshold_cell)
+                check_cell.grid_coords[num_dimensions-1] = threshold_cell;
+            if (t.find( check_cell.grid_coords ) == t.end())
+                t[check_cell.grid_coords] = 0.0;
+            
+            t[check_cell.grid_coords] += prop;
         } 
         return t;
     }
@@ -355,7 +444,7 @@ public:
             }
             double missed_prop = 1.0/total_prop;
 
-            for(auto const& kv : ts){
+            for(auto kv : ts){
                 double d = ts[kv.first];
                 ts[kv.first] *= missed_prop;
             }
@@ -475,13 +564,29 @@ public:
         file.close();
     }
 
-    void generateModelFile(std::string basename) {
+    void generateResetMapping(std::ofstream& file) {
+        unsigned int num_strips = 1;
+        for(unsigned int d=0; d<num_dimensions-1; d++)
+            num_strips *= resolution[d];
+
+        unsigned int threshold_cell = int((threshold_v - base[num_dimensions-1]) / (dimensions[num_dimensions-1] / resolution[num_dimensions-1]));
+        unsigned int reset_cell = int((reset_v - base[num_dimensions-1]) / (dimensions[num_dimensions-1] / resolution[num_dimensions-1]));
+        
+        for(unsigned int strip = 0; strip < num_strips; strip++){
+            file << strip << "," << threshold_cell << "\t" << strip << "," << reset_cell << "\t" << 1 << "\n";
+        }
+    }
+
+    void generateModelFile(std::string basename, double timestep_multiplier) {
         std::ofstream file;
         file.open(basename + ".model");
 
         file << "<Model>\n";
         file << "<Mesh>\n";
-        file << "<TimeStep>" << timestep*0.001 << "</TimeStep>\n";
+        file << "<TimeStep>" << timestep*timestep_multiplier << "</TimeStep>\n";
+
+        
+
         file << "</Mesh>\n";
         file << "<Stationary>\n";
         file << "</Stationary>\n";
@@ -491,8 +596,8 @@ public:
         file << "<V_reset>" << reset_v << "</V_reset>\n";
 
         file << "<Mapping type=\"Reset\">\n";
+        generateResetMapping(file);
         file << "</Mapping>\n";
-
         file << "</Model>\n";
 
         file.close();

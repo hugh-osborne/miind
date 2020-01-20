@@ -72,7 +72,7 @@ void VectorizedNetwork::initOde2DSystem(unsigned int min_solve_steps){
 
 	for( MPILib::Index i=0; i < _grid_meshes.size(); i++){
     vector<TwoDLib::Coordinates> coords = _vec_mesh[_grid_meshes[i]].findPointInMeshSlow(TwoDLib::Point(_start_vs[i], _start_ws[i]));
-    _group->Initialize(_grid_meshes[i],coords[0][0]+1000,coords[0][1]);
+    _group->Initialize(_grid_meshes[i],coords[0][0]+(50*2),coords[0][1]);
 
     //create CSR Matrix for each transforms
     _csrs.push_back(TwoDLib::CSRMatrix(_vec_transforms[i], *(_group), _grid_meshes[i]));
@@ -283,6 +283,8 @@ void VectorizedNetwork::setupLoop(bool write_displays){
         _csr_adapter->InitializeStaticGridEfficacySlowLateral(_connection_out_group_mesh[i], i, std::stod(_grid_connections[i]._params["efficacy"]));
       else if (_grid_connections[i]._params["type"] == "epileptor") 
         _csr_adapter->InitializeStaticGridEfficacySlowLateralEpileptor(_connection_out_group_mesh[i], i, std::stod(_grid_connections[i]._params["efficacy"]), std::stod(_grid_connections[i]._params["tau"]), std::stod(_grid_connections[i]._params["K"]), 0.0);
+      else if (_grid_connections[i]._params["type"] == "lateralnd")
+        _csr_adapter->InitializeStaticGridEfficacySlowLateralNd(_connection_out_group_mesh[i], i, std::stod(_grid_connections[i]._params["efficacy"]), std::stoi(_grid_connections[i]._params["strip_offset"]));
     } else { // if there's no type, assume it's standard efficacy
       _csr_adapter->InitializeStaticGridEfficacySlow(_connection_out_group_mesh[i], i, std::stod(_grid_connections[i]._params["efficacy"]));
     }

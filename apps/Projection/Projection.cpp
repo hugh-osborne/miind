@@ -75,6 +75,8 @@ void CalculateProjectionsGeometric(std::ofstream& ofst,
  double w_max,
  unsigned int nw
  ) {
+
+   std::cout << "Calculate\n";
   ofst << "<transitions>\n";
   
   std::vector<double> dimensions = {(w_max-w_min),(v_max-v_min)};
@@ -82,15 +84,28 @@ void CalculateProjectionsGeometric(std::ofstream& ofst,
   std::vector<unsigned int> resolution = {nw, nv};
   
   TwoDLib::MeshNd bins(0.1, 2, resolution, dimensions, base);
+
+  std::cout << "bins\n";
   TwoDLib::MeshTree tree(mesh);
+  std::cout << "tree\n";
   TwoDLib::MeshTree tree_bins(bins);
+  std::cout << "tree-bins\n";
   TwoDLib::Uniform uni(123456);
 
+  std::cout << "uni\n";
+
   std::vector<TwoDLib::FiducialElement> list;
+
+  std::cout << "pregen\n";
+
   TwoDLib::TransitionMatrixGenerator gen(tree_bins,uni,1000,list);
+
+  std::cout << "gen\n";
 
   std::vector<TwoDLib::TransitionList> transitions;
   TwoDLib::TransitionList l;
+
+  std::cout << mesh.NrStrips() << " " << mesh.NrCellsInStrip(1) << "\n\n\n";
 
   for( unsigned int i = 0; i < mesh.NrStrips(); i++ ){
     for (unsigned int j = 0; j < mesh.NrCellsInStrip(i); j++ ){
@@ -103,25 +118,13 @@ void CalculateProjectionsGeometric(std::ofstream& ofst,
 
       transitions.push_back(l);
       
-      ofst << "<cell>";
+      ofst << "<cell>" << std::flush;
       	  ofst << "<coordinates>";
       	  	  ofst << i << "," << j;
       	  ofst << "</coordinates>";
       	  ofst << "<vbins>";
           std::map<unsigned int, double> props;
-      	  for (auto h : l._destination_list){
-            if (h._prop > 0.) {
-              if (!props.count( h._cell[0] ))
-                props[h._cell[0]] = h._prop;
-              else
-                props[h._cell[0]] += h._prop;
-            }
-      	  }
-          for( std::map<unsigned int, double>::const_iterator it = props.begin(); it != props.end(); ++it )
-            ofst << it->first << "," << it->second << ";";
-      	  ofst << "</vbins>";
-      	  ofst << "<wbins>";
-      	  props.clear();
+          
       	  for (auto h : l._destination_list){
             if (h._prop > 0.) {
               if (!props.count( h._cell[1] ))
@@ -132,6 +135,22 @@ void CalculateProjectionsGeometric(std::ofstream& ofst,
       	  }
           for( std::map<unsigned int, double>::const_iterator it = props.begin(); it != props.end(); ++it )
             ofst << it->first << "," << it->second << ";";
+            
+      	  ofst << "</vbins>";
+      	  ofst << "<wbins>";
+
+          props.clear();
+      	  for (auto h : l._destination_list){
+            if (h._prop > 0.) {
+              if (!props.count( h._cell[0] ))
+                props[h._cell[0]] = h._prop;
+              else
+                props[h._cell[0]] += h._prop;
+            }
+      	  }
+          for( std::map<unsigned int, double>::const_iterator it = props.begin(); it != props.end(); ++it )
+            ofst << it->first << "," << it->second << ";";
+
       	  ofst << "</wbins>";
       ofst << "</cell>\n";
     }
@@ -228,7 +247,7 @@ void CreateProjections
 
   CalculateProjectionsGeometric(ofst, mesh, v_min, v_max, nv, w_min, w_max, nw);
 
-  ofst << "</Projection>\n";
+  ofst << "</Projection>\n" << std::flush;
 }
 
 
@@ -242,22 +261,40 @@ void ProduceProjectionFile
  double w_max,
  double nw
  ){
-  // create the mesh
-  TwoDLib::Mesh mesh(mesh_name);
-  // some sanity checking
-  std::pair<TwoDLib::Point, TwoDLib::Point> point_pair = Analyse(mesh);
-  if ( point_pair.first[0]  < v_min ||
-       point_pair.first[1]  < w_min ||
-       point_pair.second[0] > v_max ||
-       point_pair.second[1] > w_max )
-    throw TwoDLib::TwoDLibException("Your binning doesn't cover the mesh");
 
   std::vector<string> elem;
-  // Parse input arguments
   TwoDLib::split(mesh_name,'.',elem);
 
-  string projection_name(elem[0] + ".projection");
-  CreateProjections(projection_name, mesh, v_min, v_max, nv, w_min, w_max, nw);
+  // create the mesh
+  if (elem.size() < 2 || elem[1] != string("model")) { //no .model, only basename : assume nd mesh
+    //std::cout << "Model File quoted without .model extension. Proceeding assuming ND Grid.\n";
+    std::vector<double> dims = {48.0, 40.0};
+    std::vector<unsigned int> res = {50*50, 200};
+    std::vector<double> base = {-2.0, -75.0};
+    TwoDLib::MeshNd mesh(0.00001, 2, res, dims, base);
+    // some sanity checking
+    std::pair<TwoDLib::Point, TwoDLib::Point> point_pair = Analyse(mesh);
+    if ( point_pair.first[0]  < v_min ||
+        point_pair.first[1]  < w_min ||
+        point_pair.second[0] > v_max ||
+        point_pair.second[1] > w_max )
+      throw TwoDLib::TwoDLibException("Your binning doesn't cover the mesh");
+
+    string projection_name(elem[0] + ".projection");
+    CreateProjections(projection_name, mesh, v_min, v_max, nv, w_min, w_max, nw);
+  } else {
+    TwoDLib::Mesh mesh(mesh_name);
+    // some sanity checking
+    std::pair<TwoDLib::Point, TwoDLib::Point> point_pair = Analyse(mesh);
+    if ( point_pair.first[0]  < v_min ||
+        point_pair.first[1]  < w_min ||
+        point_pair.second[0] > v_max ||
+        point_pair.second[1] > w_max )
+      throw TwoDLib::TwoDLibException("Your binning doesn't cover the mesh");
+
+    string projection_name(elem[0] + ".projection");
+    CreateProjections(projection_name, mesh, v_min, v_max, nv, w_min, w_max, nw);
+  }
 
 }
 
@@ -266,16 +303,6 @@ int main(int argc, char** argv){
   try  {
     // There should be binning files and one mesh or model file.
     if (argc == 8){
-
-      // Typical use, generate projection file
-      std::string mesh_name(argv[1]);
-      std::vector<string> elem;
-
-      // Parse input arguments
-      TwoDLib::split(mesh_name,'.',elem);
-
-      if (elem.size() < 2 || elem[1] != string("model"))
-	throw TwoDLib::TwoDLibException("Model extension not .model");
 
       std::istringstream ist_vmin(argv[2]);
       std::istringstream ist_vmax(argv[3]);
@@ -300,25 +327,34 @@ int main(int argc, char** argv){
       // First determine size of the mesh
       std::cout << "Scanning model file" << std::endl;
 
-      std::string mesh_name(argv[1]);
       std::vector<string> elem;
+      TwoDLib::split(argv[1],'.',elem);
 
-      // parse input arguments
+      // create the mesh
+      if (elem.size() < 2 || elem[1] != string("model")) { //no .model, only basename : assume nd mesh
+        //std::cout << "Model File quoted without .model extension. Proceeding assuming ND Grid.\n";
+        std::vector<double> dims = {48.0, 40.0};
+        std::vector<unsigned int> res = {50*50, 200};
+        std::vector<double> base = {-2.0, -75.0};
+        TwoDLib::MeshNd mesh(0.00001, 2, res, dims, base);
+        std::cout << "There are: " << mesh.NrStrips() << " strips in the mesh." << std::endl;
 
-      TwoDLib::split(mesh_name,'.',elem);
+        // in particular, the bounding box
+        std::pair<TwoDLib::Point,TwoDLib::Point> point_pair = Analyse(mesh);
+        std::cout << "Bounding box: " << std::endl;
+        std::cout << "Upper right: " << point_pair.second[0] << " " << point_pair.second[1] << std::endl;
+        std::cout << "Lower left: "  << point_pair.first[0]  << " " << point_pair.first[1] << std::endl;
+      } else {
+        TwoDLib::Mesh mesh(argv[1]);
+        std::cout << "There are: " << mesh.NrStrips() << " strips in the mesh." << std::endl;
 
-      if (elem.size() < 2 || elem[1] != string("model"))
-	throw TwoDLib::TwoDLibException("Model extension not .model");
-
-      // print some info about the mesh
-      const TwoDLib::Mesh mesh(argv[1]);
-      std::cout << "There are: " << mesh.NrStrips() << " strips in the mesh." << std::endl;
-
-      // in particular, the bounding box
-      std::pair<TwoDLib::Point,TwoDLib::Point> point_pair = Analyse(mesh);
-      std::cout << "Bounding box: " << std::endl;
-      std::cout << "Upper right: " << point_pair.second[0] << " " << point_pair.second[1] << std::endl;
-      std::cout << "Lower left: "  << point_pair.first[0]  << " " << point_pair.first[1] << std::endl;
+        // in particular, the bounding box
+        std::pair<TwoDLib::Point,TwoDLib::Point> point_pair = Analyse(mesh);
+        std::cout << "Bounding box: " << std::endl;
+        std::cout << "Upper right: " << point_pair.second[0] << " " << point_pair.second[1] << std::endl;
+        std::cout << "Lower left: "  << point_pair.first[0]  << " " << point_pair.first[1] << std::endl;
+      }
+      
     } else {
       std::cout << "Usage: Projection <modelfile> <v_min>  <v_max> <n_points> <w_min> <w_max> <n_points> or" << std::endl;
       std::cout << "Usage: Projection <modelfile> to obtain grid boundaries" << std::endl;

@@ -108,8 +108,11 @@ class Marginal(Result):
         # Run the projection app to analyse the model file and get
         # dimensions
         projection_exe = op.join(getMiindAppsPath(), 'Projection', 'Projection')
+        basename = self.modelpath.replace('.model', '')
         out = subprocess.check_output(
-          [projection_exe, self.modelfname], cwd=self.io.xml_location)
+          [projection_exe, basename], cwd=self.io.xml_location)
+
+        print(out.decode('ascii'))
 
         # Parse the output
         vmax, wmax = np.array(out.decode('ascii').split('\n')[3].split(' ')[2:], dtype=float)
@@ -118,9 +121,11 @@ class Marginal(Result):
         inc = lambda x: x * 1.01 if x > 0 else x * 0.99
         vmax, wmax = inc(vmax), inc(wmax)
         vmin, wmin = -inc(-vmin) , -inc(-wmin)
+        
+        
 
         # Run the projection app to generate the .projection file
-        cmd = [projection_exe, self.modelfname, vmin, vmax,
+        cmd = [projection_exe, basename, vmin, vmax,
                self.vn, wmin, wmax, self.wn]
         subprocess.call([str(c) for c in cmd], cwd=self.io.xml_location)
 

@@ -109,10 +109,11 @@ void Display::display(void) {
 		return;
 
 	static unsigned int num_frames = 0;
+	bool log_scale = true;
 
 	// lets go a bit faster in our rendering eh?
-	if(num_frames++ % 5 != 0)
-		return;
+	// if(num_frames++ % 2 != 0)
+	// 	return;
 
 	static float rot = 0.0;
 
@@ -152,8 +153,15 @@ void Display::display(void) {
 			if(_dws[window_index]._system->Mass()[_dws[window_index]._system->Map(_dws[window_index]._mesh_index,i,j)]/cell_area == 0){
 				continue;
 			}
-			if (max < log10(1e-6 + _dws[window_index]._system->Mass()[_dws[window_index]._system->Map(_dws[window_index]._mesh_index,i,j)]/cell_area))
-				max = log10(1e-6 + _dws[window_index]._system->Mass()[_dws[window_index]._system->Map(_dws[window_index]._mesh_index,i,j)]/cell_area);
+			if (!log_scale) {
+				if (max < 1e-6 + _dws[window_index]._system->Mass()[_dws[window_index]._system->Map(_dws[window_index]._mesh_index,i,j)]/cell_area)
+					max = 1e-6 + _dws[window_index]._system->Mass()[_dws[window_index]._system->Map(_dws[window_index]._mesh_index,i,j)]/cell_area;
+			}
+			else {
+				if (max < log10(1e-6 + _dws[window_index]._system->Mass()[_dws[window_index]._system->Map(_dws[window_index]._mesh_index,i,j)]/cell_area))
+					max = log10(1e-6 + _dws[window_index]._system->Mass()[_dws[window_index]._system->Map(_dws[window_index]._mesh_index,i,j)]/cell_area);
+			}
+				
 		}
 	}
 
@@ -165,8 +173,16 @@ void Display::display(void) {
 				continue;
 			}
 
-			if (log10(1e-6 + _dws[window_index]._system->Mass()[_dws[window_index]._system->Map(_dws[window_index]._mesh_index,i,j)]/cell_area) < min)
-				min = log10(1e-6 + _dws[window_index]._system->Mass()[_dws[window_index]._system->Map(_dws[window_index]._mesh_index,i,j)]/cell_area);
+			if (!log_scale)
+			{
+				if (1e-6 + _dws[window_index]._system->Mass()[_dws[window_index]._system->Map(_dws[window_index]._mesh_index,i,j)]/cell_area < min)
+					min = 1e-6 + _dws[window_index]._system->Mass()[_dws[window_index]._system->Map(_dws[window_index]._mesh_index,i,j)]/cell_area;
+			}
+			else {
+				if (log10(1e-6 + _dws[window_index]._system->Mass()[_dws[window_index]._system->Map(_dws[window_index]._mesh_index,i,j)]/cell_area) < min)
+					min = log10(1e-6 + _dws[window_index]._system->Mass()[_dws[window_index]._system->Map(_dws[window_index]._mesh_index,i,j)]/cell_area);
+			}
+				
 		}
 	}
 
@@ -264,10 +280,10 @@ void Display::display(void) {
 
 	// Display 3D mass
 
-	double rot_y_angle = -M_PI_4+(rot);
+	double rot_y_angle = -M_PI_4+3.6+(rot);
 	double rot_x_angle = (-M_PI_4/2.0);
 
-	rot += 0.01;
+	// rot += 0.01;
 
 	double x_scale = 1.0;
 	double y_scale = 1.0;
@@ -277,9 +293,9 @@ void Display::display(void) {
 	double y_pos = 0.0;
 	double z_pos = -1.0;
 
-	unsigned int size_x = 100;
-	unsigned int size_y = 100;
-	unsigned int size_z = 100;
+	unsigned int size_x = 200;
+	unsigned int size_y = 50;
+	unsigned int size_z = 50;
 
 	std::vector<std::vector<double>> world_scale = {{x_scale,0.0,0.0,0.0},{0.0,y_scale,0.0,0.0},{0.0,0.0,z_scale,0.0},{0.0,0.0,0.0,1.0}};
 	std::vector<std::vector<double>> world_x_rotation = {{1.0,0.0,0.0,0.0},{0.0,cos(rot_x_angle),sin(rot_x_angle),0.0},{0.0,-sin(rot_x_angle),cos(rot_x_angle),0.0},{0.0,0.0,0.0,1.0}};
@@ -296,8 +312,14 @@ void Display::display(void) {
 
 				double cell_area = std::abs(m.Quad(0,0).SignedArea());
 				double mass = 0.0;
-				if (cell_area != 0 && _dws[window_index]._system->Mass()[idx] > 0.0)
-					mass = (log10(_dws[window_index]._system->Mass()[idx]/cell_area) - min) / (max-min);
+				if (!log_scale) {
+					if (cell_area != 0 && _dws[window_index]._system->Mass()[idx] > 0.0)
+						mass = (_dws[window_index]._system->Mass()[idx]/cell_area - min) / (max-min);
+				}
+				else {
+					if (cell_area != 0 && _dws[window_index]._system->Mass()[idx] > 0.0)
+						mass = (log10(_dws[window_index]._system->Mass()[idx]/cell_area) - min) / (max-min);
+				}	
 
 				if (i == 0 || k == 0 || j == 0 || i == size_z-1 || k == size_y-1 || j == size_x-1) {
 					glColor4f(1.0, 1.0, 1.0, 0.01);

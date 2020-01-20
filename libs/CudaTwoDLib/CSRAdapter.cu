@@ -124,7 +124,7 @@ void CSRAdapter::InitializeStaticGridEfficacySlow(const inttype vecindex, const 
     fptype s = 1.0 - g;
 
     int o1 = efficacy > 0 ? ofs : -ofs;
-    int o2 = efficacy > 0 ? (ofs+1) : (ofs-1);
+    int o2 = efficacy > 0 ? (ofs+1) : (-ofs-1);
 
     int r1 = (i+o1)%_nr_rows[vecindex];
     unsigned int ind_1 = r1< 0 ? r1 + _nr_rows[vecindex] : r1;
@@ -180,7 +180,7 @@ void CSRAdapter::UpdateGridEfficacySlow(const inttype vecindex, const inttype co
     fptype s = 1.0 - g;
 
     int o1 = efficacy > 0 ? ofs : -ofs;
-    int o2 = efficacy > 0 ? (ofs+1) : (ofs-1);
+    int o2 = efficacy > 0 ? (ofs+1) : (-ofs-1);
 
     int r1 = (i+o1)%_nr_rows[vecindex];
     unsigned int ind_1 = r1< 0 ? r1 + _nr_rows[vecindex] : r1;
@@ -238,7 +238,7 @@ void CSRAdapter::InitializeStaticGridEfficacySlowLateralEpileptor(const inttype 
     fptype s = 1.0 - g;
 
     int o1 = eff > 0 ? ofs : -ofs;
-    int o2 = eff > 0 ? (ofs+1) : (ofs-1);
+    int o2 = eff > 0 ? (ofs+1) : (-ofs-1);
 
     int r1 = (i+(o1*strip_length))%_nr_rows[vecindex];
     unsigned int ind_1 = r1< 0 ? r1 + _nr_rows[vecindex] : r1;
@@ -296,7 +296,7 @@ void CSRAdapter::UpdateGridEfficacySlowLateralEpileptor(const inttype vecindex, 
     fptype s = 1.0 - g;
 
     int o1 = eff > 0 ? ofs : -ofs;
-    int o2 = eff > 0 ? (ofs+1) : (ofs-1);
+    int o2 = eff > 0 ? (ofs+1) : (-ofs-1);
 
     int r1 = (i+(o1*strip_length))%_nr_rows[vecindex];
     unsigned int ind_1 = r1< 0 ? r1 + _nr_rows[vecindex] : r1;
@@ -354,7 +354,7 @@ void CSRAdapter::InitializeStaticGridEfficacySlowLateral(const inttype vecindex,
     fptype s = 1.0 - g;
 
     int o1 = efficacy > 0 ? ofs : -ofs;
-    int o2 = efficacy > 0 ? (ofs+1) : (ofs-1);
+    int o2 = efficacy > 0 ? (ofs+1) : (-ofs-1);
 
     int r1 = (i+(o1*strip_length))%_nr_rows[vecindex];
     unsigned int ind_1 = r1< 0 ? r1 + _nr_rows[vecindex] : r1;
@@ -412,7 +412,7 @@ void CSRAdapter::UpdateGridEfficacySlowLateral(const inttype vecindex, const int
     fptype s = 1.0 - g;
 
     int o1 = efficacy > 0 ? ofs : -ofs;
-    int o2 = efficacy > 0 ? (ofs+1) : (ofs-1);
+    int o2 = efficacy > 0 ? (ofs+1) : (-ofs-1);
 
     int r1 = (i+(o1*strip_length))%_nr_rows[vecindex];
     unsigned int ind_1 = r1< 0 ? r1 + _nr_rows[vecindex] : r1;
@@ -446,6 +446,69 @@ void CSRAdapter::UpdateGridEfficacySlowLateral(const inttype vecindex, const int
   checkCudaErrors(cudaMemcpy(_ia[m],&ia[0],sizeof(inttype)*_nia[m],cudaMemcpyHostToDevice));
 
   _nja[m] = ja.size();
+  checkCudaErrors(cudaMemcpy(_ja[m],&ja[0],sizeof(inttype)*_nja[m],cudaMemcpyHostToDevice));
+}
+
+
+void CSRAdapter::InitializeStaticGridEfficacySlowLateralNd(const inttype vecindex, const inttype connindex, 
+  const fptype efficacy, const inttype strip_offset) {
+
+  inttype m = connindex + _grid_transforms.size();
+
+  unsigned int strip_length = _group.getGroup().MeshObjects()[vecindex].NrCellsInStrip(0);
+
+  _offsets[m] = _group.getGroup().Offsets()[vecindex];
+  _nr_rows[m] = _nr_rows[vecindex];
+
+  // This is going to be slow : we have to generate the forward transitions before we
+  // can translate to val, ia and ja. We have to do this because we no longer know
+  // how many incoming cells there will be (when not v dependent it's always two incoming cells)
+  std::vector<std::vector<unsigned int>> inds(_nr_rows[vecindex]);
+  std::vector<std::vector<double>> vals(_nr_rows[vecindex]);
+  for (unsigned int i=0; i<_nr_rows[vecindex]; i++) {
+    fptype eff = efficacy;
+    inttype ofs = (inttype)abs(eff / _cell_heights[vecindex]);
+    fptype g = (fptype)fabs(eff / _cell_heights[vecindex]) - ofs;
+    fptype s = 1.0 - g;
+
+    int o1 = efficacy > 0 ? ofs : -ofs;
+    int o2 = efficacy > 0 ? (ofs+1) : (-ofs-1);
+
+    int r1 = (i+(o1*strip_length*strip_offset))%_nr_rows[vecindex];
+    unsigned int ind_1 = r1< 0 ? r1 + _nr_rows[vecindex] : r1;
+
+    int r2 = (i+(o2*strip_length*strip_offset))%_nr_rows[vecindex];
+    unsigned int ind_2 = r2< 0 ? r2 + _nr_rows[vecindex] : r2;
+
+    inds[ind_1].push_back(i);
+    inds[ind_2].push_back(i);
+    vals[ind_1].push_back(s);
+    vals[ind_2].push_back(g);
+  }
+
+  std::vector<inttype> ia;
+  std::vector<inttype> ja;
+  std::vector<fptype> val;
+  ia.push_back(0);
+
+  for (MPILib::Index i = 0; i < inds.size(); i++){
+    ia.push_back( ia.back() + inds[i].size());
+    for (MPILib::Index j = 0; j < inds[i].size(); j++){
+      val.push_back((fptype)vals[i][j]);
+      ja.push_back(inds[i][j]);
+    }
+  }
+
+  _nval[m] = val.size();
+  checkCudaErrors(cudaMalloc((fptype**)&_val[m],_nval[m]*sizeof(fptype)));
+  checkCudaErrors(cudaMemcpy(_val[m],&val[0],sizeof(fptype)*_nval[m],cudaMemcpyHostToDevice));
+
+  _nia[m] = ia.size();
+  checkCudaErrors(cudaMalloc((inttype**)&_ia[m],_nia[m]*sizeof(inttype)));
+  checkCudaErrors(cudaMemcpy(_ia[m],&ia[0],sizeof(inttype)*_nia[m],cudaMemcpyHostToDevice));
+
+  _nja[m] = ja.size();
+  checkCudaErrors(cudaMalloc((inttype**)&_ja[m],_nja[m]*sizeof(inttype)));
   checkCudaErrors(cudaMemcpy(_ja[m],&ja[0],sizeof(inttype)*_nja[m],cudaMemcpyHostToDevice));
 }
 
@@ -485,7 +548,7 @@ void CSRAdapter::InitializeStaticGridVDependentEfficacies(const std::vector<intt
       fptype s = 1.0 - g;
 
       int o1 = efficacy[m] > 0 ? ofs : -ofs;
-      int o2 = efficacy[m] > 0 ? (ofs+1) : (ofs-1);
+      int o2 = efficacy[m] > 0 ? (ofs+1) : (-ofs-1);
 
       int r1 = (i-o1)%_nr_rows[vecindex[m]];
       unsigned int ind_1 = r1< 0 ? r1 + _nr_rows[vecindex[m]] : r1;

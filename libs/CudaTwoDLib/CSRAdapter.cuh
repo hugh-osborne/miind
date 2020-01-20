@@ -62,6 +62,8 @@ namespace CudaTwoDLib {
 
 				void InitializeStaticGridEfficacySlowLateral(const inttype vecindex, const inttype connindex, const fptype efficacy);
 
+				void InitializeStaticGridEfficacySlowLateralNd(const inttype vecindex, const inttype connindex, const fptype efficacy, const inttype strip_offset);
+
 				void InitializeStaticGridEfficacySlowLateralEpileptor(const inttype vecindex, const inttype connindex, const fptype efficacy, const fptype tau, const fptype K, const fptype v_in);
 
 				void UpdateGridEfficacySlow(const inttype vecindex, const inttype connindex, const fptype efficacy);

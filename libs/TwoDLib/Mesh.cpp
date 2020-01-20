@@ -513,5 +513,5 @@ void Mesh::ToXML(ostream& s) const{
 		}
 		s << "</Strip>\n";
 	}
-	s << "</Mesh>\n";
+	s << "</Mesh>\n" << std::flush;
 }

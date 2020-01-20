@@ -83,6 +83,10 @@ public:
         for(Simplex s : test_simplices){
             vol_prop += s.getVolume();
         }
+
+        if (orig_vol == 0.0)
+            return 0.0;
+            
         return vol_prop / orig_vol;
     }
 };

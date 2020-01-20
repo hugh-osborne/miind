@@ -28,7 +28,8 @@ namespace TwoDLib {
                 _strip_length = _resolution[_num_dimensions-1];
                 _num_strips = 1;
                 for (unsigned int d = 0; d< _resolution.size()-1; d++) { _num_strips *= _resolution[d]; }
-                _grid_cell_width =  dimensions[_num_dimensions-1] / _strip_length;
+                _grid_cell_width = dimensions[_num_dimensions-1] / _strip_length;
+                _grid_cell_height = dimensions[0] / 50.0;
                 _t_step = t_step;
 
                 for (unsigned int i =0; i<_num_strips; i++){
@@ -37,7 +38,7 @@ namespace TwoDLib {
                         // For now, just generate four 2D points for the last two
                         // demensions
                         double v_width = _dimensions[_num_dimensions-1] / _resolution[_num_dimensions-1];
-                        double w_width = _dimensions[0] / (_resolution[0]);
+                        double w_width = _dimensions[0] / (_resolution[0] / 50.0);
                         double pv = v_width * j;
                         double pw = w_width * i;
                         double bv = _base[_num_dimensions-1];

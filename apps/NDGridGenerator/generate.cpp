@@ -1,14 +1,14 @@
 #include "Grid.hpp"
 
 int main() {
-	std::vector<double> base = {2.5,-13.0,-3.0};
-	std::vector<double> dims = {1.0,16.0,6.0};
-	std::vector<unsigned int> res = {100,100,100};
-	double threshold = 1.99;
-	double reset_v = -1.99;
-	Grid g(base, dims, res, threshold, reset_v, 0.1);
+	std::vector<double> base = {-2.0,-2.0,-75};
+	std::vector<double> dims = {48.0,48.0,40};
+	std::vector<unsigned int> res = {50,50,200};
+	double threshold = -40.4;
+	double reset_v = -70.6;
+	Grid g(base, dims, res, threshold, reset_v, 0.01);
 
-	g.generateModelFile("hindmarsh_rose");
-	g.generateTMatFileBatched("hindmarsh_rose");
+	g.generateModelFile("conductanceInNdNoise", 0.001);
+	g.generateTMatFileBatched("conductanceInNdNoise");
 	return 0;
 }

@@ -61,16 +61,22 @@ Point MeshTree::FindNearest(const Point& p) const
 
 void MeshTree::FillTree()
 {
+	std::cout << "fill tree\n";
 	vector<kd_node_t> vec_nodes;
 	for(auto it_strip = _mesh._vec_vec_quad.begin(); it_strip != _mesh._vec_vec_quad.end(); it_strip++)
 		for(auto it_cell = it_strip->begin(); it_cell != it_strip->end(); it_cell++){
 			for(auto it_point = it_cell->Points().begin(); it_point != it_cell->Points().end(); it_point++){
+				std::cout << "node\n";
 				kd_node_t node;
 				node.x[0] = (*it_point)[0];
+				std::cout << (*it_point)[0] << "\n";
 				node.x[1] = (*it_point)[1];
+				std::cout << (*it_point)[1] << "\n";
 				vec_nodes.push_back(node);
+				std::cout << "node2\n";
 			}
 		}
+	std::cout << "buffer\n";
 	_buffer = new char[vec_nodes.size()*sizeof(kd_node_t)];
 	_root=make_tree(_buffer, &(vec_nodes[0]),vec_nodes.size(),0,_dimension);
 }
