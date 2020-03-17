@@ -10,6 +10,8 @@
 #include <sstream>
 #include <limits>
 #include <algorithm>
+#include <omp.h>
+#include <iomanip>
 #include "TwoDLib.hpp"
 
 const int N_POINTS = 10;
@@ -115,6 +117,8 @@ void CalculateProjectionsGeometric(std::ofstream& ofst,
       l._number = gen.N();
       l._origin = TwoDLib::Coordinates(i,j);
       l._destination_list = gen.HitList();
+
+      std::cout << '\r' << std::setw(10) << 100.0 * ((float)(j+(i*mesh.NrCellsInStrip(1)))/(float)(mesh.NrStrips()*mesh.NrCellsInStrip(1))) << "%" << std::setfill(' ') << std::flush;
 
       transitions.push_back(l);
       
@@ -247,7 +251,9 @@ void CreateProjections
 
   CalculateProjectionsGeometric(ofst, mesh, v_min, v_max, nv, w_min, w_max, nw);
 
-  ofst << "</Projection>\n" << std::flush;
+  std::cout << "\nComplete.\n";
+
+  ofst << "</Projection>\n";
 }
 
 
@@ -268,7 +274,7 @@ void ProduceProjectionFile
   // create the mesh
   if (elem.size() < 2 || elem[1] != string("model")) { //no .model, only basename : assume nd mesh
     //std::cout << "Model File quoted without .model extension. Proceeding assuming ND Grid.\n";
-    std::vector<double> dims = {48.0, 40.0};
+    std::vector<double> dims = {60.0, 40.0};
     std::vector<unsigned int> res = {50*50, 200};
     std::vector<double> base = {-2.0, -75.0};
     TwoDLib::MeshNd mesh(0.00001, 2, res, dims, base);
@@ -333,7 +339,7 @@ int main(int argc, char** argv){
       // create the mesh
       if (elem.size() < 2 || elem[1] != string("model")) { //no .model, only basename : assume nd mesh
         //std::cout << "Model File quoted without .model extension. Proceeding assuming ND Grid.\n";
-        std::vector<double> dims = {48.0, 40.0};
+        std::vector<double> dims = {60.0, 40.0};
         std::vector<unsigned int> res = {50*50, 200};
         std::vector<double> base = {-2.0, -75.0};
         TwoDLib::MeshNd mesh(0.00001, 2, res, dims, base);

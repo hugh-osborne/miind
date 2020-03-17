@@ -245,7 +245,7 @@ public:
                 ps[i].coords[d] += base_point_coords[d];
             }
             if(btranslated)
-                applyMauritzioInEuler(ps[i]);
+                applyMauritzioExEuler(ps[i]);
         }
 
         return Cell(cell_coord, num_dimensions, ps, triangulator);

@@ -134,8 +134,8 @@ void CSRAdapter::InitializeStaticGridEfficacySlow(const inttype vecindex, const 
 
     inds[ind_1].push_back(i);
     inds[ind_2].push_back(i);
-    vals[ind_1].push_back(g);
-    vals[ind_2].push_back(s);
+    vals[ind_1].push_back(s);
+    vals[ind_2].push_back(g);
   }
 
   std::vector<inttype> ia;
@@ -190,8 +190,8 @@ void CSRAdapter::UpdateGridEfficacySlow(const inttype vecindex, const inttype co
 
     inds[ind_1].push_back(i);
     inds[ind_2].push_back(i);
-    vals[ind_1].push_back(g);
-    vals[ind_2].push_back(s);
+    vals[ind_1].push_back(s);
+    vals[ind_2].push_back(g);
   }
 
   std::vector<inttype> ia;
