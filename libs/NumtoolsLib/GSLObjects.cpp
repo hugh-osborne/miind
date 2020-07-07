@@ -17,7 +17,6 @@
 //
 //      If you use this software in work leading to a scientific publication, you should cite
 //      the 'currently valid reference', which can be found at http://miind.sourceforge.net
-#include "pch.h"
 #include "GSLObjects.h"
 
 using namespace NumtoolsLib;
