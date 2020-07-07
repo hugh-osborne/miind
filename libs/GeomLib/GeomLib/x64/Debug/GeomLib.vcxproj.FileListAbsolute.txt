@@ -1,0 +1,2 @@
+D:\dev\MIIND_WINDOWS\x64\Debug\GeomLib.pdb
+D:\dev\MIIND_WINDOWS\libs\GeomLib\GeomLib\x64\Debug\GeomLib.pdb

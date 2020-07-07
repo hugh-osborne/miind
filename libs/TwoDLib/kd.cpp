@@ -20,6 +20,7 @@
 
 // This code was adapted from http://rosettacode.org/wiki/K-d_tree, and made available there under:
 // http://www.gnu.org/licenses/fdl-1.2.html. Authors can be found in the history tab of that page.
+
 #include <cstring>
 #include <vector>
 #include "kd.h"

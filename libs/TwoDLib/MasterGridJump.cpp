@@ -42,8 +42,8 @@ _cell_width(cell_width)
       double goes = (double)fabs(efficacy_map[i] / _cell_width) - offset;
       double stays = 1.0 - goes;
 
-      int offset_1 = efficacy_map[i] > 0 ? -offset : offset;
-      int offset_2 = efficacy_map[i] > 0 ? -(offset+1) : -(offset-1);
+      int offset_1 = efficacy_map[i] > 0 ? -(int)offset : offset;
+      int offset_2 = efficacy_map[i] > 0 ? -(int)(offset+1) : -(int)(offset-1);
 
       _stays.push_back(vector<double>(_dydt.size()));
       _goes.push_back(vector<double>(_dydt.size()));
@@ -72,8 +72,8 @@ _cell_width(cell_width)
         double goes = (double)fabs(eff / _cell_width) - offset;
         double stays = 1.0 - goes;
 
-        int offset_1 = eff > 0 ? -offset : offset;
-        int offset_2 = eff > 0 ? -(offset+1) : -(offset-1);
+        int offset_1 = eff > 0 ? -(int)offset : offset;
+        int offset_2 = eff > 0 ? -(int)(offset+1) : -(int)(offset-1);
 
         _stays[i][j] = stays;
         _goes[i][j] = goes;

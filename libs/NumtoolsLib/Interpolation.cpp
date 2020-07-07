@@ -17,6 +17,7 @@
 //
 //      If you use this software in work leading to a scientific publication, you should cite
 //      the 'currently valid reference', which can be found at http://miind.sourceforge.net
+#include "pch.h"
 #include "Interpolation.h"
 #include "NumtoolsLibException.h"
 #include <gsl/gsl_errno.h>

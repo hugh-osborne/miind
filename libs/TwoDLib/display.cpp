@@ -1,3 +1,4 @@
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <vector>
@@ -365,7 +366,8 @@ void Display::animate(bool _write_frames, std::vector<MPILib::NodeId> nodes_to_d
 	Display::getInstance()->write_frames = _write_frames;
 	Display::getInstance()->_time_step = time_step;
 
-	char* arv[] = {"Miind"};
+	char  arg0[] = "Miind";
+	char* arv[] = {&arg0[0]};
 	int count = 1;
 	glutInit(&count, arv);
 	glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);

@@ -1,0 +1,2 @@
+D:\dev\MIIND_WINDOWS\x64\Debug\CudaTwoDLib.pdb
+D:\dev\MIIND_WINDOWS\libs\CudaTwoDLib\CudaTwoDLib\CudaTwoDLib\x64\Debug\CudaTwoDLib.pdb

@@ -23,7 +23,6 @@
 
 #include <cassert>
 #include <cuda_runtime.h>
-#include "../TwoDLib/TwoDLib.hpp"
 #include "CudaOde2DSystemAdapter.cuh"
 
 

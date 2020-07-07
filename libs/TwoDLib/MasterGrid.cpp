@@ -57,7 +57,7 @@ _cell_width(cell_width)
 
  void MasterGrid::CalculateStaticEfficiacies(vector<double>& efficacy_map) {
    	for (MPILib::Index i = 0; i < efficacy_map.size(); i++){
-      unsigned int offset = (unsigned int)abs(efficacy_map[i]/_cell_width);
+      int offset = (unsigned int)abs(efficacy_map[i]/_cell_width);
       double goes = (double)fabs(efficacy_map[i] / _cell_width) - offset;
       double stays = 1.0 - goes;
 
@@ -91,8 +91,8 @@ _cell_width(cell_width)
         double goes = (double)fabs(eff / _cell_width) - offset;
         double stays = 1.0 - goes;
 
-        int offset_1 = eff > 0 ? -offset : offset;
-        int offset_2 = eff > 0 ? -(offset+1) : -(offset-1);
+        int offset_1 = eff > 0 ? -(int)offset : offset;
+        int offset_2 = eff > 0 ? -(int)(offset+1) : -(int)(offset-1);
 
         _stays[i][j] = stays;
         _goes[i][j] = goes;
@@ -148,8 +148,8 @@ _cell_width(cell_width)
     double goes = (double)fabs(vec_eff[irate] / _cell_width) - offset;
     double stays = 1.0 - goes;
 
-    int offset_1 = vec_eff[irate] > 0 ? -offset : offset;
-    int offset_2 = vec_eff[irate] > 0 ? -(offset+1) : -(offset-1);
+    int offset_1 = vec_eff[irate] > 0 ? -(int)offset : offset;
+    int offset_2 = vec_eff[irate] > 0 ? -(int)(offset+1) : -(int)(offset-1);
 
     // it is only the matrices that need to be mapped
     MVGrid

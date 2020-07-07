@@ -25,7 +25,6 @@
 #include <iostream>
 #include <cassert>
 #include <fstream>
-#include <boost/timer/timer.hpp>
 #include <MPILib/include/utilities/Log.hpp>
 #include <MPILib/include/utilities/ParallelException.hpp>
 #include <MPILib/include/utilities/IterationNumberException.hpp>

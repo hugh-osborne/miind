@@ -99,17 +99,22 @@ void Log::writeOutput(const std::string& msg) {
 
 std::ostringstream& Log::writeReport(LogLevel level) {
 	//generate time in the format Date HH::MM::SS
+
+	struct tm newtime;
+	time_t now = time(0);
+	localtime_s(&newtime, &now);
+
 	time_t rawtime;
 	time(&rawtime);
 	struct tm tempTm1;
-	struct tm *tempTm2;
-	tempTm2 = localtime_r(&rawtime, &tempTm1);
+	localtime_s(&tempTm1, &rawtime);
+
 	char outstr[200];
-	strftime(outstr, sizeof(outstr), "%x% %H:%M:%S", tempTm2);
+	sprintf_s(outstr, 200, "%i-%i-%i %i:%i:%i", tempTm1.tm_year, tempTm1.tm_mon, tempTm1.tm_mday, tempTm1.tm_hour, tempTm1.tm_min, tempTm1.tm_sec);
 
 	_buffer << "- " << outstr;
 	_buffer << " Proc " << MPIProxy().getRank() << " of "
-			<< MPIProxy().getSize();
+		<< MPIProxy().getSize();
 	_buffer << std::setw(10) << logLevelToString(level) << ":\t";
 	return _buffer;
 }

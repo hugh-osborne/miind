@@ -22,7 +22,9 @@
 #define _CODE_CUDA2DLIB_CudaOde2DSystemAdapter_INCLUDE_GUARD
 
 #include <cassert>
-#include "../TwoDLib/TwoDLib.hpp"
+#include <map>
+#include "../TwoDLib/Ode2DSystemGroup.hpp"
+
 
 
 namespace CudaTwoDLib {

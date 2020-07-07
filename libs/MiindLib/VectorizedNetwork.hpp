@@ -3,6 +3,8 @@
 
 #include <CudaTwoDLib/CudaTwoDLib.hpp>
 #include <MPILib/include/DelayedConnectionQueue.hpp>
+#include <TwoDLib/display.hpp>
+#include <TwoDLib/MasterParameter.hpp>
 
 typedef CudaTwoDLib::fptype fptype;
 typedef CudaTwoDLib::inttype inttype;

@@ -1,5 +1,6 @@
 #include "VectorizedNetwork.hpp"
 #include <boost/timer/timer.hpp>
+#include <boost/filesystem.hpp>
 
 using namespace MiindLib;
 

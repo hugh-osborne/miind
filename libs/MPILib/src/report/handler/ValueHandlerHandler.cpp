@@ -21,6 +21,8 @@
 #pragma warning(disable: 4267 4996)
 #endif
 
+#include "pch.h"
+
 #include <sstream>
 #include <boost/bind.hpp>
 #include <TGraph.h>

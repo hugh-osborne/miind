@@ -4,7 +4,7 @@
 #define LINUX // This #define is used in glew.c so it does not require installation
 #include "include/GL/glew.h"
 // The application does require glut to be installed
-#include <GL/freeglut.h>
+#include "include/GL/freeglut.h"
 
 #include <string>
 #include <chrono>

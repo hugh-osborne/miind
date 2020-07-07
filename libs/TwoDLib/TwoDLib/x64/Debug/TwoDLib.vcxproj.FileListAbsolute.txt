@@ -1,0 +1,2 @@
+D:\dev\MIIND_WINDOWS\x64\Debug\TwoDLib.pdb
+D:\dev\MIIND_WINDOWS\libs\TwoDLib\TwoDLib\x64\Debug\TwoDLib.pdb

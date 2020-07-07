@@ -87,25 +87,7 @@ int main(){
 	network.makeFirstInputOfSecond(id_lock, id_gate, -1*weight);
 	network.makeFirstInputOfSecond(id_openlock, id_lock, -2*weight);
 
-	MPILib::CanvasParameter par_canvas;
-	par_canvas._state_min     = -0.020;
-	par_canvas._state_max     = 0.020;
-	par_canvas._t_min         = 0.0;
-	par_canvas._t_max         = 2.0;
-	par_canvas._f_min         = 0.0;
-	par_canvas._f_max         = 50.0;
-	par_canvas._dense_min     = 0.0;
-	par_canvas._dense_max     = 200.0;
-
-
-
-	MPILib::report::handler::RootReportHandler handler("singlepoptest", true, true, par_canvas );
-
-	handler.addNodeToCanvas(id_input);
-	handler.addNodeToCanvas(id_gate);
-	handler.addNodeToCanvas(id_output);
-	handler.addNodeToCanvas(id_lock);
-	handler.addNodeToCanvas(id_openlock);
+	MPILib::report::handler::MinimalReportHandler handler("singlepoptest", true, true );
 
 	const SimulationRunParameter
 		par_run

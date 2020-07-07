@@ -15,7 +15,6 @@
 // USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-
 #include <algorithm>
 #include <fstream>
 #include <sstream>
@@ -77,8 +76,8 @@ Mesh::GridCellTransition Mesh::calculateCellTransition(double efficacy) const{
 	double goes = (double)fabs(efficacy / _grid_cell_width) - offset;
 	double stays = 1.0 - goes;
 
-	int offset_1 = efficacy > 0 ? -offset : offset;
-	int offset_2 = efficacy > 0 ? -(offset+1) : -(offset-1);
+	int offset_1 = efficacy > 0 ? -(int)offset : offset;
+	int offset_2 = efficacy > 0 ? -(int)(offset+1) : -(int)(offset-1);
 
 	return Mesh::GridCellTransition(stays, goes, offset_1, offset_2);
 }

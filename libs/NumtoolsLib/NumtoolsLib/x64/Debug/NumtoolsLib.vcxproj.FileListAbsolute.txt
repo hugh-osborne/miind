@@ -1,0 +1,2 @@
+D:\dev\MIIND_WINDOWS\x64\Debug\NumtoolsLib.pdb
+D:\dev\MIIND_WINDOWS\libs\NumtoolsLib\NumtoolsLib\x64\Debug\NumtoolsLib.pdb

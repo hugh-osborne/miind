@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>16.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{8de3bdd2-74de-4b66-97e3-e65057a3a2d4}</ProjectGuid>
+    <RootNamespace>MPILib</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <IncludePath>$(SolutionDir)\libs;$(ProjectDir)..\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <IncludePath>$(SolutionDir)\libs;$(ProjectDir)\..\include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>DEBUGLEVEL=logINFO;WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <Link>
+      <SubSystem>
+      </SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <Link>
+      <SubSystem>
+      </SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions> _CRT_SECURE_NO_WARNINGS;WIN32;DEBUGLEVEL=logINFO;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <Link>
+      <SubSystem>
+      </SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <Link>
+      <SubSystem>
+      </SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="..\include\AlgorithmGrid.hpp" />
+    <ClInclude Include="..\include\AlgorithmInterface.hpp" />
+    <ClInclude Include="..\include\BasicDefinitions.hpp" />
+    <ClInclude Include="..\include\CustomConnectionParameters.hpp" />
+    <ClInclude Include="..\include\DelayAlgorithm.hpp" />
+    <ClInclude Include="..\include\DelayAlgorithmCode.hpp" />
+    <ClInclude Include="..\include\DelayAssemblyAlgorithm.hpp" />
+    <ClInclude Include="..\include\DelayAssemblyAlgorithmCode.hpp" />
+    <ClInclude Include="..\include\DelayAssemblyParameter.hpp" />
+    <ClInclude Include="..\include\DelayedConnection.hpp" />
+    <ClInclude Include="..\include\DelayedConnectionQueue.hpp" />
+    <ClInclude Include="..\include\HebbianAlgorithm.hpp" />
+    <ClInclude Include="..\include\HebbianParameter.hpp" />
+    <ClInclude Include="..\include\MiindTvbModelAbstract.hpp" />
+    <ClInclude Include="..\include\MPINetwork.hpp" />
+    <ClInclude Include="..\include\MPINetworkCode.hpp" />
+    <ClInclude Include="..\include\MPINode.hpp" />
+    <ClInclude Include="..\include\MPINodeCode.hpp" />
+    <ClInclude Include="..\include\NetworkState.hpp" />
+    <ClInclude Include="..\include\NodeType.hpp" />
+    <ClInclude Include="..\include\PersistantAlgorithm.hpp" />
+    <ClInclude Include="..\include\populist\RateFunctor.hpp" />
+    <ClInclude Include="..\include\populist\RateFunctorCode.hpp" />
+    <ClInclude Include="..\include\ProbabilityQueue.hpp" />
+    <ClInclude Include="..\include\RateAlgorithm.hpp" />
+    <ClInclude Include="..\include\RateAlgorithmCode.hpp" />
+    <ClInclude Include="..\include\RateFunctor.hpp" />
+    <ClInclude Include="..\include\RateFunctorCode.hpp" />
+    <ClInclude Include="..\include\RefractoryQueue.hpp" />
+    <ClInclude Include="..\include\report\handler\AbstractReportHandler.hpp" />
+    <ClInclude Include="..\include\report\handler\CanvasParameter.hpp" />
+    <ClInclude Include="..\include\report\handler\GraphKey.hpp" />
+    <ClInclude Include="..\include\report\handler\InactiveReportHandler.hpp" />
+    <ClInclude Include="..\include\report\handler\MinimalReportHandler.hpp" />
+    <ClInclude Include="..\include\report\handler\ValueHandlerHandler.hpp" />
+    <ClInclude Include="..\include\report\Report.hpp" />
+    <ClInclude Include="..\include\report\ReportType.hpp" />
+    <ClInclude Include="..\include\report\ReportValue.hpp" />
+    <ClInclude Include="..\include\SimulationRunParameter.hpp" />
+    <ClInclude Include="..\include\StampedProbability.hpp" />
+    <ClInclude Include="..\include\StringDefinitions.hpp" />
+    <ClInclude Include="..\include\TypeDefinitions.hpp" />
+    <ClInclude Include="..\include\utilities\CircularDistribution.hpp" />
+    <ClInclude Include="..\include\utilities\Exception.hpp" />
+    <ClInclude Include="..\include\utilities\FileNameGenerator.hpp" />
+    <ClInclude Include="..\include\utilities\IterationNumberException.hpp" />
+    <ClInclude Include="..\include\utilities\Log.hpp" />
+    <ClInclude Include="..\include\utilities\MPIProxy.hpp" />
+    <ClInclude Include="..\include\utilities\NodeDistributionInterface.hpp" />
+    <ClInclude Include="..\include\utilities\ParallelException.hpp" />
+    <ClInclude Include="..\include\utilities\ProgressBar.hpp" />
+    <ClInclude Include="..\include\utilities\Singleton.hpp" />
+    <ClInclude Include="..\include\WilsonCowanAlgorithm.hpp" />
+    <ClInclude Include="..\include\WilsonCowanParameter.hpp" />
+    <ClInclude Include="framework.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\AlgorithmGrid.cpp" />
+    <ClCompile Include="..\src\DelayedConnectionQueueCode.cpp" />
+    <ClCompile Include="..\src\HebbianAlgorithm.cpp" />
+    <ClCompile Include="..\src\NetworkState.cpp" />
+    <ClCompile Include="..\src\PersistantAlgorithm.cpp" />
+    <ClCompile Include="..\src\ProbabilityQueue.cpp" />
+    <ClCompile Include="..\src\RefractoryQueue.cpp" />
+    <ClCompile Include="..\src\report\handler\AbstractReportHandler.cpp" />
+    <ClCompile Include="..\src\report\handler\CanvasParameter.cpp" />
+    <ClCompile Include="..\src\report\handler\GraphKey.cpp" />
+    <ClCompile Include="..\src\report\handler\InactiveReportHandler.cpp" />
+    <ClCompile Include="..\src\report\handler\MinimalReportHandler.cpp" />
+    <ClCompile Include="..\src\report\Report.cpp" />
+    <ClCompile Include="..\src\SimulationRunParameter.cpp" />
+    <ClCompile Include="..\src\utilities\CircularDistribution.cpp" />
+    <ClCompile Include="..\src\utilities\Exception.cpp" />
+    <ClCompile Include="..\src\utilities\FileNameGenerator.cpp" />
+    <ClCompile Include="..\src\utilities\IterationNumberException.cpp" />
+    <ClCompile Include="..\src\utilities\Log.cpp" />
+    <ClCompile Include="..\src\utilities\MPIProxy.cpp" />
+    <ClCompile Include="..\src\utilities\ParallelException.cpp" />
+    <ClCompile Include="..\src\utilities\ProgressBar.cpp" />
+    <ClCompile Include="..\src\WilsonCowanAlgorithm.cpp" />
+    <ClCompile Include="MPILib.cpp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
