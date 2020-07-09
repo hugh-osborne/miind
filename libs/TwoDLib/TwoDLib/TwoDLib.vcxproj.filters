@@ -206,9 +206,6 @@
     <ClCompile Include="..\Fid.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\glew.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\kd.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

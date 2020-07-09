@@ -1,2 +1,0 @@
-D:\dev\MIIND_WINDOWS\x64\Debug\MPILib.pdb
-D:\dev\MIIND_WINDOWS\libs\MPILib\MPILib\x64\Debug\MPILib.pdb

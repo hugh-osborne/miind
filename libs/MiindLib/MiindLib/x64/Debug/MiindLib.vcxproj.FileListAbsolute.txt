@@ -1,2 +1,0 @@
-D:\dev\MIIND_WINDOWS\x64\Debug\MiindLib.pdb
-D:\dev\MIIND_WINDOWS\libs\MiindLib\MiindLib\x64\Debug\MiindLib.pdb

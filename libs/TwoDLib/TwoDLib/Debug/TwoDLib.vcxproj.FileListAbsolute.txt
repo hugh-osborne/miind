@@ -1,2 +1,0 @@
-D:\dev\MIIND_WINDOWS\Debug\TwoDLib.pdb
-D:\dev\MIIND_WINDOWS\libs\TwoDLib\TwoDLib\Debug\TwoDLib.pdb

@@ -40,7 +40,7 @@ namespace TwoDLib {
   public:
 
 	///  Default constructor, required for vector of cells, avoid.
-	Cell();
+      Cell() {};
 
 	/// Construct a cell from a vector of points
 	Cell

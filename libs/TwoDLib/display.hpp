@@ -2,9 +2,9 @@
 #define _CODE_LIBS_TWODLIB_DISPLAY_INCLUDE_GUARD
 
 #define LINUX // This #define is used in glew.c so it does not require installation
-#include "include/GL/glew.h"
+#include <GL/glew.h>
 // The application does require glut to be installed
-#include "include/GL/freeglut.h"
+#include <GL/freeglut.h>
 
 #include <string>
 #include <chrono>
