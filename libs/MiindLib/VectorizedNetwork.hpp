@@ -12,6 +12,17 @@ typedef MPILib::Rate (*function_pointer)(MPILib::Time);
 typedef std::pair<MPILib::Index, function_pointer> function_association;
 typedef std::vector<function_association> function_list;
 
+class rate_functor {
+private:
+    MPILib::Rate _rate;
+public:
+    rate_functor() : _rate(0.0) {}
+    rate_functor(MPILib::Rate rate) : _rate(rate) {}
+    MPILib::Rate operator () (MPILib::Time) const {
+        return _rate;
+    }
+};
+
 namespace MiindLib {
 
 class NodeMeshConnection {
@@ -91,6 +102,8 @@ public:
 
   void addRateNode(function_pointer functor);
 
+  void addRateNode(rate_functor functor);
+
   void addExternalMonitor(MPILib::NodeId node);
 
   void addGridConnection(MPILib::NodeId in, MPILib::NodeId out, std::map<std::string, std::string> params);
@@ -113,6 +126,9 @@ public:
   void setupLoop(bool write_displays);
   std::vector<double> singleStep(std::vector<double>, unsigned int i_loop);
   void endLoops();
+
+  void setTimeStep(double time_step) { _network_time_step = time_step; }
+  double getTimeStep() { return _network_time_step;  }
 
 protected:
 
@@ -181,6 +197,7 @@ protected:
   std::vector<NodeGridConnection> _grid_connections;
 
   function_list _rate_functions;
+  std::map<MPILib::Index, rate_functor> _rate_functors;
 
   std::map<MPILib::NodeId, MPILib::Index> _node_id_to_group_mesh;
   std::map<MPILib::Index, MPILib::NodeId> _group_mesh_to_node_id;

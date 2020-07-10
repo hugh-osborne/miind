@@ -44,6 +44,11 @@ void VectorizedNetwork::addRateNode(function_pointer functor){
   _rate_functions.push_back(function_association(_num_nodes-1,functor));
 }
 
+void VectorizedNetwork::addRateNode(rate_functor functor) {
+    _num_nodes++;
+    _rate_functors[_num_nodes - 1] = functor;
+}
+
 void VectorizedNetwork::initOde2DSystem(unsigned int min_solve_steps){
 
   int mesh_count = 0;
@@ -250,7 +255,7 @@ void VectorizedNetwork::setupLoop(bool write_displays){
     }
 
   _csr_adapter = new CudaTwoDLib::CSRAdapter(*_group_adapter,_csrs,
-  _mesh_connections.size()+_grid_connections.size()+_mesh_custom_connections.size(),h,_mesh_transform_indexes,_grid_transform_indexes);
+      _effs.size(),h,_mesh_transform_indexes,_grid_transform_indexes);
 
   _csr_adapter->InitializeStaticGridEfficacies(_connection_out_group_mesh, _effs);
 }
@@ -262,6 +267,12 @@ std::vector<double> VectorizedNetwork::singleStep(std::vector<double> activities
     for(unsigned int i=0; i<_node_to_connection_queue[element.first].size(); i++){
       _connection_queue[_node_to_connection_queue[element.first][i]].updateQueue(element.second(time));
     }
+  }
+
+  for (const auto& element : _rate_functors) {
+      for (unsigned int i = 0; i < _node_to_connection_queue[element.first].size(); i++) {
+          _connection_queue[_node_to_connection_queue[element.first][i]].updateQueue(element.second(time));
+      }
   }
 
   for(int i=0; i<activities.size(); i++){

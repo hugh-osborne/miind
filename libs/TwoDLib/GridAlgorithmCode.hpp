@@ -211,7 +211,7 @@ namespace TwoDLib {
 
 				_sys.EvolveWithoutMeshUpdate();
 #pragma omp parallel for
-				 for(unsigned int id = 0; id < _mass_swap.size(); id++)
+				 for(int id = 0; id < _mass_swap.size(); id++)
 					  _mass_swap[id] = 0.;
 
 			 	_csr_transform->MV(_mass_swap,_sys._vec_mass);

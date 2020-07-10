@@ -123,7 +123,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>$(SolutionDir)\x64\Debug\MPILib.lib;$(SolutionDir)\x64\Debug\TwoDLib.lib;$(SolutionDir)\x64\Debug\NumtoolsLib.lib;$(SolutionDir)\x64\Debug\GeomLib.lib;$(SolutionDir)\x64\Debug\CudaTwoDLib.lib;$(SolutionDir)\x64\Debug\MiindLib.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(SolutionDir)\x64\Debug\MPILib.lib;$(SolutionDir)\x64\Debug\TwoDLib.lib;$(SolutionDir)\x64\Debug\NumtoolsLib.lib;$(SolutionDir)\x64\Debug\GeomLib.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -132,15 +132,17 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>ENABLE_OPENMP;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <OpenMPSupport>
+      </OpenMPSupport>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>$(SolutionDir)\x64\Release\MPILib.lib;$(SolutionDir)\x64\Release\TwoDLib.lib;$(SolutionDir)\x64\Release\NumtoolsLib.lib;$(SolutionDir)\x64\Release\GeomLib.lib;$(SolutionDir)\x64\Release\CudaTwoDLib.lib;$(SolutionDir)\x64\Release\MiindLib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(SolutionDir)\x64\Release\MPILib.lib;$(SolutionDir)\x64\Release\TwoDLib.lib;$(SolutionDir)\x64\Release\NumtoolsLib.lib;$(SolutionDir)\x64\Release\GeomLib.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

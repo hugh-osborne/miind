@@ -142,7 +142,7 @@ void CSRAdapter::InspectMass(inttype i)
 }
 
 CSRAdapter::CSRAdapter(CudaOde2DSystemAdapter& group, const std::vector<TwoDLib::CSRMatrix>& vecmat,
- inttype nr_connections, fptype euler_timestep,
+ inttype nr_grid_connections, fptype euler_timestep,
  const std::vector<inttype>& vecmat_indexes,const std::vector<inttype>& grid_transforms):
 _group(group),
 _euler_timestep(euler_timestep),
@@ -160,10 +160,10 @@ _ja(std::vector<inttype*>(vecmat.size())),
 _offsets(this->Offsets(vecmat)),
 _nr_rows(this->NrRows(vecmat)),
 _cell_widths(this->CellWidths(vecmat)),
-_goes(std::vector<fptype*>(grid_transforms.size())),
-_stays(std::vector<fptype*>(grid_transforms.size())),
-_offset1s(std::vector<int*>(grid_transforms.size())),
-_offset2s(std::vector<int*>(grid_transforms.size())),
+_goes(nr_grid_connections),
+_stays(nr_grid_connections),
+_offset1s(nr_grid_connections),
+_offset2s(nr_grid_connections),
 _blockSize(256),
 _numBlocks( (_group._n + _blockSize - 1) / _blockSize)
 {
