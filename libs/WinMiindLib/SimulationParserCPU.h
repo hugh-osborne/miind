@@ -4,6 +4,7 @@
 #include <MPILib/include/MiindTvbModelAbstract.hpp>
 #include <MPILib/include/RateAlgorithm.hpp>
 #include <TwoDLib/GridAlgorithmCode.hpp>
+#include <TwoDLib/MeshAlgorithmCustomCode.hpp>
 #include <MPILib/include/CustomConnectionParameters.hpp>
 
 // This is used to get the template type in char* format
@@ -23,14 +24,14 @@ REGISTER_PARSE_TYPE(double);
 
 
 template <class WeightType>
-class SimulationParser : public MPILib::MiindTvbModelAbstract<WeightType, MPILib::utilities::CircularDistribution> {
+class SimulationParserCPU : public MPILib::MiindTvbModelAbstract<WeightType, MPILib::utilities::CircularDistribution> {
 public:
-	SimulationParser(int num_nodes, const std::string xml_filename) :
+	SimulationParserCPU(int num_nodes, const std::string xml_filename) :
 		// For now we don't allow num_nodes : override to 1 node only.
 		MiindTvbModelAbstract<WeightType, MPILib::utilities::CircularDistribution>(1, 1.0), _count(0), _xml_filename(xml_filename) {
 	}
 
-	SimulationParser(const std::string xml_filename) :
+	SimulationParserCPU(const std::string xml_filename) :
 		MiindTvbModelAbstract<WeightType, MPILib::utilities::CircularDistribution>(1, 1.0), _count(0), _xml_filename(xml_filename) {
 	}
 
@@ -74,9 +75,11 @@ public:
 
 	void parseXmlFile() {
 		pugi::xml_document doc;
-		if (!doc.load_file(_xml_filename.c_str()))
+		if (!doc.load_file(_xml_filename.c_str())) {
 			std::cout << "Failed to load XML simulation file.\n";
-
+			return; //better to throw...
+		}
+			
 		//check Weight Type matches this class
 		if (std::string(TypeParseTraits<WeightType>::name) != std::string(doc.child("Simulation").child_value("WeightType"))) {
 			std::cout << "The weight type of the SimulationParser (" << TypeParseTraits<WeightType>::name << ") doesn't match the WeightType in the XML file (" << doc.child("Simulation").child_value("WeightType") << "). Exiting.\n";
@@ -105,6 +108,22 @@ public:
 				_algorithms[algorithm_name] = std::unique_ptr<MPILib::AlgorithmInterface<WeightType>>(new TwoDLib::GridAlgorithm(model_filename, transform_filename, time_step, start_v, start_w, tau_refractive));
 			}
 
+			if (std::string("MeshAlgorithmCustom") == std::string(algorithm.attribute("type").value())) {
+				std::string algorithm_name = std::string(algorithm.attribute("name").value());
+				std::cout << "Found MeshAlgorithmCustom " << algorithm_name << ".\n" << std::flush;
+
+				std::string model_filename = std::string(algorithm.attribute("modelfile").value());
+				double tau_refractive = std::stod(std::string(algorithm.attribute("tau_refractive").value()));
+				double time_step = std::stod(std::string(algorithm.child_value("TimeStep")));
+
+				std::vector<std::string> matrix_files;
+				for (pugi::xml_node matrix_file = algorithm.child("MatrixFile"); matrix_file; matrix_file = matrix_file.next_sibling("MatrixFile")) {
+					matrix_files.push_back(std::string(matrix_file.child_value()));
+				}
+				
+				_algorithms[algorithm_name] = std::unique_ptr<MPILib::AlgorithmInterface<CustomConnectionParameters>>(new TwoDLib::MeshAlgorithmCustom<TwoDLib::MasterOdeint>(model_filename, matrix_files, time_step, tau_refractive));
+			}
+
 			if (std::string("RateFunctor") == std::string(algorithm.attribute("type").value())) {
 				// As we can't use the "expression" part properly here because we're not doing an intemediate cpp translation step
 				// Let's just use RateAlgorithm for RateFunctor for now.
@@ -117,6 +136,7 @@ public:
 			}
 
 			//... todo : other algorithms
+			//... todo : AvgV or no?
 		}
 
 		//Nodes
@@ -243,7 +263,7 @@ public:
 			MiindTvbModelAbstract<WeightType, MPILib::utilities::CircularDistribution>::_simulation_length);
 	}
 
-private:
+protected:
 
 	std::string _xml_filename;
 

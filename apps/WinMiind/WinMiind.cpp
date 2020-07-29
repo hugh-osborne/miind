@@ -7,11 +7,11 @@
 #include <MPILib/include/DelayAlgorithmCode.hpp>
 #include <MPILib/include/RateFunctorCode.hpp>
 
-#include "SimulationParser.h"
+#include <WinMiindLib/SimulationParserCPU.h>
 
 void main() {
 
-	SimulationParser<MPILib::CustomConnectionParameters> sim_parser(std::string("lif.xml"));
+	SimulationParserCPU<MPILib::CustomConnectionParameters> sim_parser(std::string("lif.xml"));
 	sim_parser.init();
 	sim_parser.startSimulation();
 

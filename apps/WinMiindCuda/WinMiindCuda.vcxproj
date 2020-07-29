@@ -13,9 +13,6 @@
   <ItemGroup>
     <ClCompile Include="WinMiind.cpp" />
   </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="SimulationParser.h" />
-  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{A4EC4B96-5144-4A1A-B13D-8EC1CF264308}</ProjectGuid>
     <RootNamespace>WinMiindCuda</RootNamespace>
@@ -73,8 +70,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;WIN64;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalOptions>-g -Wall  -pedantic -O0 %(AdditionalOptions)</AdditionalOptions>
+      <PreprocessorDefinitions>WIN32;WIN64;_CONSOLE;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <WholeProgramOptimization>false</WholeProgramOptimization>
       <OpenMPSupport>
       </OpenMPSupport>
