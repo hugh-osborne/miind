@@ -7,6 +7,7 @@ import pylab
 import numpy
 import matplotlib.pyplot as plt
 
+#import WinMiindPythonCuda as miind
 import WinMiindPython as miind
 
 number_of_nodes = 1

@@ -230,7 +230,11 @@ void VectorizedNetwork::setupLoop(bool write_displays){
     // for each connection, which of group's meshes is being affected
     _connection_out_group_mesh.push_back(_node_id_to_group_mesh[_mesh_custom_connections[i]._out]);
 
-    _csrs.push_back(TwoDLib::CSRMatrix(*(_mesh_custom_connections[i]._transition), *(_group), _node_id_to_group_mesh[_mesh_connections[i]._out]));
+    TwoDLib::TransitionMatrix mat = *(_mesh_custom_connections[i]._transition);
+    auto id = _node_id_to_group_mesh[_mesh_custom_connections[i]._out];
+    auto ffs = TwoDLib::CSRMatrix(*(_mesh_custom_connections[i]._transition), *(_group), _node_id_to_group_mesh[_mesh_custom_connections[i]._out]);
+    _csrs.push_back(ffs);
+
     // _csrs contains all the grid transforms first (see initOde2DSystem)
     // now we're adding all the mesh transition matrices so set the correct index value
     _mesh_transform_indexes.push_back(_grid_meshes.size()+i);
