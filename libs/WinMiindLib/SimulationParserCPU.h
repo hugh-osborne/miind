@@ -158,7 +158,7 @@ public:
 
 			std::string algorithm_name = std::string(node.attribute("algorithm").value());
 
-			MPILib::NodeId id = MiindTvbModelAbstract<WeightType, MPILib::utilities::CircularDistribution>::network.addNode(*_algorithms[algorithm_name], MPILib::EXCITATORY_DIRECT);
+			MPILib::NodeId id = MiindTvbModelAbstract<WeightType, MPILib::utilities::CircularDistribution>::network.addNode(*_algorithms[algorithm_name], node_type);
 			_node_ids[node_name] = id;
 		}
 

@@ -44,7 +44,10 @@ class MiindSimulation:
 
         xml_base_fname, _ = op.splitext(self.xml_fname)
         self.submit_name = submit_name or xml_base_fname
-        self.output_directory = op.join(self.xml_location, self.submit_name, xml_base_fname)
+        # For Windows, the output directory is the same as the xml sim file.
+        self.output_directory = op.join(self.xml_location)
+        # For linux
+        # self.output_directory = op.join(self.xml_location, self.submit_name, xml_base_fname)
         self.miind_executable = xml_base_fname
 
         # grab the names of the model files used and whether we should expect

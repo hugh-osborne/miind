@@ -9,9 +9,14 @@
 
 #include <MiindLib/SimulationParserGPU.h>
 
-void main() {
+void main(int argc, char** argv) {
+	if (argc == 1)
+		std::cout << "WinMiindCuda requires an XML simulation file.\n";
+	if (argc > 2)
+		std::cout << "WinMiindCuda requires an XML simulation file only.\n";
 
-	SimulationParserGPU<MPILib::CustomConnectionParameters> sim_parser(std::string("lif.xml"));
+	std::string current_exec_name = argv[1];
+	SimulationParserGPU<MPILib::CustomConnectionParameters> sim_parser(current_exec_name);
 	sim_parser.init();
 	sim_parser.startSimulation();
 

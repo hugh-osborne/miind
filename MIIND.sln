@@ -109,6 +109,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WinMiindPythonCuda", "libs\
 		{42C953F0-EAFC-49F8-99BB-83CDEFC5BFC3} = {42C953F0-EAFC-49F8-99BB-83CDEFC5BFC3}
 	EndProjectSection
 EndProject
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "IsoTask", "examples\IsoTask\IsoTask.pyproj", "{9F3DF950-4789-4C18-A295-4A23C39339B0}"
+EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "MIIND", "apps\MIIND\MIIND.vdproj", "{96F59636-CD70-43AB-B79C-2A21F298FEF7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -247,6 +251,18 @@ Global
 		{3A0279FC-71D4-45FE-B952-9315227384E1}.Release|x64.ActiveCfg = Release|x64
 		{3A0279FC-71D4-45FE-B952-9315227384E1}.Release|x64.Build.0 = Release|x64
 		{3A0279FC-71D4-45FE-B952-9315227384E1}.Release|x86.ActiveCfg = Release|x64
+		{9F3DF950-4789-4C18-A295-4A23C39339B0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9F3DF950-4789-4C18-A295-4A23C39339B0}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{9F3DF950-4789-4C18-A295-4A23C39339B0}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{9F3DF950-4789-4C18-A295-4A23C39339B0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9F3DF950-4789-4C18-A295-4A23C39339B0}.Release|x64.ActiveCfg = Release|Any CPU
+		{9F3DF950-4789-4C18-A295-4A23C39339B0}.Release|x86.ActiveCfg = Release|Any CPU
+		{96F59636-CD70-43AB-B79C-2A21F298FEF7}.Debug|Any CPU.ActiveCfg = Debug
+		{96F59636-CD70-43AB-B79C-2A21F298FEF7}.Debug|x64.ActiveCfg = Debug
+		{96F59636-CD70-43AB-B79C-2A21F298FEF7}.Debug|x86.ActiveCfg = Debug
+		{96F59636-CD70-43AB-B79C-2A21F298FEF7}.Release|Any CPU.ActiveCfg = Release
+		{96F59636-CD70-43AB-B79C-2A21F298FEF7}.Release|x64.ActiveCfg = Release
+		{96F59636-CD70-43AB-B79C-2A21F298FEF7}.Release|x86.ActiveCfg = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
