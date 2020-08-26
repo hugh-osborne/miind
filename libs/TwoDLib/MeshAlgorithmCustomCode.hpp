@@ -91,7 +91,7 @@ namespace TwoDLib {
 		MPILib::Time tau_refractive,
 		const std::string&  rate_method
 	):
-	_tolerance(1e-7),
+	_tolerance(1e-13),
 	_model_name(model_name),
 	_mat_names(mat_names),
 	_rate_method(rate_method),

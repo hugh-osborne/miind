@@ -21,7 +21,7 @@ import mesh3 as meshmod
 class MeshTools:
     @staticmethod
     def buildModelFileFromMesh(basename, reset_potential, threshold_potential):
-        bind_exe = op.join(getMiindAppsPath(), 'MatrixGenerator', 'Bind')
+        bind_exe = op.join('Bind')
         subprocess.call([
           bind_exe,
           basename + '.mesh',
@@ -40,7 +40,7 @@ class MeshTools:
 
     @staticmethod
     def buildTransformFileFromModel(basename, num_mc_points=100000, reset_shift_w=0, mode='transform'):
-        matrix_generator_exe = op.join(getMiindAppsPath(), 'MatrixGenerator', 'MatrixGenerator')
+        matrix_generator_exe = op.join('MatrixGenerator')
 
         if (mode == 'resettransform'):
             model = None
@@ -73,7 +73,7 @@ class MeshTools:
     def buildMatrixFileFromModel(basename, spike_shift_v, fidfile=None, num_mc_points=10,
                                     spike_shift_w=0, reset_shift_w=0, use_area_calculation=False,
                                     jump_file=None, mode=None):
-        matrix_generator_exe = op.join(getMiindAppsPath(), 'MatrixGenerator', 'MatrixGenerator')
+        matrix_generator_exe = op.join('MatrixGenerator')
 
         if not fidfile:
             fidfile = MeshTools.generateStubFidFile(basename)

@@ -69,6 +69,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_782F8C1397334C908EE43BACB75C6CE8"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_7C2E7C16A2684CB8BD7C402C26082BCC"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -76,6 +82,12 @@
         "Entry"
         {
         "MsmKey" = "8:_83945D50AC7D43C39F9A13506EE2284F"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_908DB4FF3A1D405D8BFE915C703FAAB9"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -648,7 +660,7 @@
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:MIIND"
         "ProductCode" = "8:{281821BB-5F56-491F-97B3-4B8DB322DD43}"
-        "PackageCode" = "8:{2008267E-AE6A-49DE-9C59-0B8470F9565C}"
+        "PackageCode" = "8:{098F5FEE-9153-4BAE-880E-AA298E73498C}"
         "UpgradeCode" = "8:{BF85AAD1-8FEB-430E-B266-9375B91B93A7}"
         "AspNetVersion" = "8:2.0.50727.0"
         "RestartWWWService" = "11:FALSE"
@@ -1195,6 +1207,34 @@
                 {
                 }
             }
+            "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_782F8C1397334C908EE43BACB75C6CE8"
+            {
+            "SourcePath" = "8:..\\..\\x64\\Release\\MatrixGenerator.exe"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_85A5AFDF46D54DCEBD3FC08354D4F776"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            "ProjectOutputGroupRegister" = "3:1"
+            "OutputConfiguration" = "8:"
+            "OutputGroupCanonicalName" = "8:Built"
+            "OutputProjectGuid" = "8:{434F86BC-5D4E-423B-A1FE-1BCF6B3F9C56}"
+            "ShowKeyOutput" = "11:TRUE"
+                "ExcludeFilters"
+                {
+                }
+            }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_83945D50AC7D43C39F9A13506EE2284F"
             {
             "SourcePath" = "8:..\\..\\x64\\Release\\WinMiindCuda.exe"
@@ -1218,6 +1258,34 @@
             "OutputConfiguration" = "8:"
             "OutputGroupCanonicalName" = "8:Built"
             "OutputProjectGuid" = "8:{A4EC4B96-5144-4A1A-B13D-8EC1CF264308}"
+            "ShowKeyOutput" = "11:TRUE"
+                "ExcludeFilters"
+                {
+                }
+            }
+            "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_908DB4FF3A1D405D8BFE915C703FAAB9"
+            {
+            "SourcePath" = "8:..\\..\\x64\\Release\\Bind.exe"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_85A5AFDF46D54DCEBD3FC08354D4F776"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            "ProjectOutputGroupRegister" = "3:1"
+            "OutputConfiguration" = "8:"
+            "OutputGroupCanonicalName" = "8:Built"
+            "OutputProjectGuid" = "8:{E0278764-ABF7-4A68-9986-605AFE97CC13}"
             "ShowKeyOutput" = "11:TRUE"
                 "ExcludeFilters"
                 {
