@@ -1,0 +1,114 @@
+<Simulation>
+<WeightType>CustomConnectionParameters</WeightType>
+<Algorithms>
+<Algorithm type="MeshAlgorithmCustom" name="LIF" tau_refractive="0.002" modelfile="lif.model" >
+<TimeStep>0.001</TimeStep>
+<MatrixFile>lif_0.1_0_0_0_.mat</MatrixFile>
+<MatrixFile>lif_-0.1_0_0_0_.mat</MatrixFile>
+</Algorithm>
+</Algorithms>
+<Nodes>
+  <Node algorithm="LIF" name="BIClong_alpha" type="NEUTRAL" />
+  <Node algorithm="LIF" name="BIClong_beta" type="NEUTRAL" />
+  <Node algorithm="LIF" name="BIClong_gamma" type="NEUTRAL" />
+  <Node algorithm="LIF" name="TRIlong_alpha" type="NEUTRAL" />
+  <Node algorithm="LIF" name="TRIlong_beta" type="NEUTRAL" />
+  <Node algorithm="LIF" name="TRIlong_gamma" type="NEUTRAL" />
+  <Node algorithm="LIF" name="TRImed_alpha" type="NEUTRAL" />
+  <Node algorithm="LIF" name="TRImed_beta" type="NEUTRAL" />
+  <Node algorithm="LIF" name="TRImed_gamma" type="NEUTRAL" />
+  <Node algorithm="LIF" name="DELT1_alpha" type="NEUTRAL" />
+  <Node algorithm="LIF" name="DELT1_beta" type="NEUTRAL" />
+  <Node algorithm="LIF" name="DELT1_gamma" type="NEUTRAL" />
+  <Node algorithm="LIF" name="DELT2_alpha" type="NEUTRAL" />
+  <Node algorithm="LIF" name="DELT2_beta" type="NEUTRAL" />
+  <Node algorithm="LIF" name="DELT2_gamma" type="NEUTRAL" />
+  <Node algorithm="LIF" name="DELT3_alpha" type="NEUTRAL" />
+  <Node algorithm="LIF" name="DELT3_beta" type="NEUTRAL" />
+  <Node algorithm="LIF" name="DELT3_gamma" type="NEUTRAL" />
+  <Node algorithm="LIF" name="FCR_alpha" type="NEUTRAL" />
+  <Node algorithm="LIF" name="FCR_beta" type="NEUTRAL" />
+  <Node algorithm="LIF" name="FCR_gamma" type="NEUTRAL" />
+  <Node algorithm="LIF" name="ECRL_alpha" type="NEUTRAL" />
+  <Node algorithm="LIF" name="ECRL_beta" type="NEUTRAL" />
+  <Node algorithm="LIF" name="ECRL_gamma" type="NEUTRAL" />
+  <Node algorithm="LIF" name="PECM1_alpha" type="NEUTRAL" />
+  <Node algorithm="LIF" name="PECM1_beta" type="NEUTRAL" />
+  <Node algorithm="LIF" name="PECM1_gamma" type="NEUTRAL" />
+  <Node algorithm="LIF" name="PECM2_alpha" type="NEUTRAL" />
+  <Node algorithm="LIF" name="PECM2_beta" type="NEUTRAL" />
+  <Node algorithm="LIF" name="PECM2_gamma" type="NEUTRAL" />
+  <Node algorithm="LIF" name="PECM3_alpha" type="NEUTRAL" />
+  <Node algorithm="LIF" name="PECM3_beta" type="NEUTRAL" />
+  <Node algorithm="LIF" name="PECM3_gamma" type="NEUTRAL" />
+  <Node algorithm="LIF" name="LAT1_alpha" type="NEUTRAL" />
+  <Node algorithm="LIF" name="LAT1_beta" type="NEUTRAL" />
+  <Node algorithm="LIF" name="LAT1_gamma" type="NEUTRAL" />
+  <Node algorithm="LIF" name="LAT2_alpha" type="NEUTRAL" />
+  <Node algorithm="LIF" name="LAT2_beta" type="NEUTRAL" />
+  <Node algorithm="LIF" name="LAT2_gamma" type="NEUTRAL" />
+  <Node algorithm="LIF" name="LAT3_alpha" type="NEUTRAL" />
+  <Node algorithm="LIF" name="LAT3_beta" type="NEUTRAL" />
+  <Node algorithm="LIF" name="LAT3_gamma" type="NEUTRAL" />
+  
+</Nodes>
+<Connections>
+  <IncomingConnection Node="BIClong_alpha" num_connections="0.1" efficacy="0.1" delay="0.0"/>
+  <IncomingConnection Node="BIClong_beta" num_connections="0.1" efficacy="0.1" delay="0.0"/>
+  <IncomingConnection Node="BIClong_gamma" num_connections="0.1" efficacy="0.1" delay="0.0"/>
+  
+  <OutgoingConnection Node="BIClong_alpha"/>
+  <OutgoingConnection Node="BIClong_beta"/>
+  <OutgoingConnection Node="BIClong_gamma"/>
+  <OutgoingConnection Node="TRIlong_alpha"/>
+  <OutgoingConnection Node="TRIlong_beta"/>
+  <OutgoingConnection Node="TRIlong_gamma"/>
+  <OutgoingConnection Node="TRImed_alpha"/>
+  <OutgoingConnection Node="TRImed_beta"/>
+  <OutgoingConnection Node="TRImed_gamma"/>
+  <OutgoingConnection Node="DELT1_alpha"/>
+  <OutgoingConnection Node="DELT1_beta"/>
+  <OutgoingConnection Node="DELT1_gamma"/>
+  <OutgoingConnection Node="DELT2_alpha"/>
+  <OutgoingConnection Node="DELT2_beta"/>
+  <OutgoingConnection Node="DELT2_gamma"/>
+  <OutgoingConnection Node="DELT3_alpha"/>
+  <OutgoingConnection Node="DELT3_beta"/>
+  <OutgoingConnection Node="DELT3_gamma"/>
+  <OutgoingConnection Node="FCR_alpha"/>
+  <OutgoingConnection Node="FCR_beta"/>
+  <OutgoingConnection Node="FCR_gamma"/>
+  <OutgoingConnection Node="ECRL_alpha"/>
+  <OutgoingConnection Node="ECRL_beta"/>
+  <OutgoingConnection Node="ECRL_gamma"/>
+  <OutgoingConnection Node="PECM1_alpha"/>
+  <OutgoingConnection Node="PECM1_beta"/>
+  <OutgoingConnection Node="PECM1_gamma"/>
+  <OutgoingConnection Node="PECM2_alpha"/>
+  <OutgoingConnection Node="PECM2_beta"/>
+  <OutgoingConnection Node="PECM2_gamma"/>
+  <OutgoingConnection Node="PECM3_alpha"/>
+  <OutgoingConnection Node="PECM3_beta"/>
+  <OutgoingConnection Node="PECM3_gamma"/>
+  <OutgoingConnection Node="LAT1_alpha"/>
+  <OutgoingConnection Node="LAT1_beta"/>
+  <OutgoingConnection Node="LAT1_gamma"/>
+  <OutgoingConnection Node="LAT2_alpha"/>
+  <OutgoingConnection Node="LAT2_beta"/>
+  <OutgoingConnection Node="LAT2_gamma"/>
+  <OutgoingConnection Node="LAT3_alpha"/>
+  <OutgoingConnection Node="LAT3_beta"/>
+  <OutgoingConnection Node="LAT3_gamma"/>
+</Connections>
+<Reporting>
+	<!--<Display node="BIClong_alpha" />-->
+</Reporting>
+<SimulationRunParameter>
+<master_steps>10</master_steps>
+<max_iter>1000000</max_iter>
+<t_begin>0</t_begin>
+<t_end>5</t_end>
+<t_step>0.001</t_step>
+<name_log>miind.log</name_log>
+</SimulationRunParameter>
+</Simulation>
