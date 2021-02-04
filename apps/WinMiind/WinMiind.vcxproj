@@ -82,7 +82,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(SolutionDir)\libs;$(SolutionDir)\libs\GeomLib;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <IncludePath>$(SolutionDir)\libs;$(SolutionDir)\libs\GeomLib;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -142,7 +142,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>$(SolutionDir)\x64\Release\MPILib.lib;$(SolutionDir)\x64\Release\TwoDLib.lib;$(SolutionDir)\x64\Release\NumtoolsLib.lib;$(SolutionDir)\x64\Release\GeomLib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(SolutionDir)\x64\Release\MPILib.lib;$(SolutionDir)\x64\Release\TwoDLib.lib;$(SolutionDir)\x64\Release\NumtoolsLib.lib;$(SolutionDir)\x64\Release\GeomLib.lib;$(SolutionDir)\x64\Release\WinMiindLib.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

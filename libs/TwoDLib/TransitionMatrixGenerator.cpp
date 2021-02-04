@@ -330,12 +330,21 @@ void TransitionMatrixGenerator::GenerateTransformUsingQuadTranslation(unsigned i
 
 			total_area_full += area;
 
-			total_area += (std::abs(area))/(std::abs(quad_trans.SignedArea()));
+			// Running the risk that quad_trans area = 0 and we get a NaN. Check for that here
 
-			if (std::abs(area) > 0) {
+			double area_check = std::abs(quad_trans.SignedArea());
+			if (area_check == 0.0)
+				total_area += 1.0;
+			else
+				total_area += (std::abs(area))/ area_check;
+
+			if (std::abs(area) > 0 && area_check > 0) {
 				Hit h;
 				h._cell = Coordinates(s,c);
-				h._prop = std::abs(area)/std::abs(quad_trans.SignedArea());
+				if (area_check == 0.0)
+					h._prop = 1.0;
+				else
+					h._prop = std::abs(area) / area_check;
 				_hit_list.push_back(h);
 			}
 		}

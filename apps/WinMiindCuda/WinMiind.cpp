@@ -15,7 +15,7 @@ void main(int argc, char** argv) {
 	if (argc > 2)
 		std::cout << "WinMiindCuda requires an XML simulation file only.\n";
 
-	std::string current_exec_name = "coba.mxml";// argv[1];
+	std::string current_exec_name = "rybak.mxml"; //argv[1];
 	SimulationParserGPU<MPILib::CustomConnectionParameters> sim_parser(current_exec_name);
 	sim_parser.init();
 	sim_parser.startSimulation();

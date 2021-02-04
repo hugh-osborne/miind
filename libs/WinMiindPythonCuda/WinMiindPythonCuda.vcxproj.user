@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <LocalDebuggerEnvironment>PYTHONPATH=D:\dev\Anaconda3\envs\py38</LocalDebuggerEnvironment>
+    <LocalDebuggerEnvironment>PYTHONLIB=D:\dev\Anaconda3\envs\py38</LocalDebuggerEnvironment>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerCommand>D:\dev\Anaconda3\envs\py38\python.exe</LocalDebuggerCommand>
     <LocalDebuggerCommandArguments>-i -c "print('&gt;&gt;&gt; import WinMiindPython'); import WinMiindPython"</LocalDebuggerCommandArguments>

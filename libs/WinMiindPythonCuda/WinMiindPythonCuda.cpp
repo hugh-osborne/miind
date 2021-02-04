@@ -70,7 +70,7 @@ PyObject* miind_evolveSingleStep(PyObject* self, PyObject* args)
     for (int index = 0; index < out_activities.size(); index++) {
         PyTuple_SetItem(tuple, index, Py_BuildValue("d", out_activities[index]));
     }
-
+     
     return tuple;
 }
 

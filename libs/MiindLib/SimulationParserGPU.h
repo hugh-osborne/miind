@@ -3,7 +3,7 @@
 #include <string>
 #include <MPILib/include/MiindTvbModelAbstract.hpp>
 #include <MPILib/include/RateAlgorithm.hpp>
-#include <TwoDLib/GridAlgorithmCode.hpp>
+#include <TwoDLib/GridAlgorithm.hpp>
 #include <MPILib/include/CustomConnectionParameters.hpp>
 #include <CudaTwoDLib/CudaTwoDLib.hpp>
 #include <MiindLib/VectorizedNetwork.hpp>
@@ -92,7 +92,7 @@ public:
 			connection_parameters[std::string(ait->name())] = std::string(ait->value());
 			// todo : Check the value for a variable definition - need a special function for checking all inputs really
 		}
-		vec_network.addGridConnection(_node_ids[node], connection_parameters, _external_node_ids.size());
+		vec_network.addGridConnection(_node_ids[node], connection_parameters, _external_node_count);
 	}
 
 	void addIncomingMeshConnectionCCP(pugi::xml_node& xml_conn) {
@@ -110,7 +110,7 @@ public:
 			// todo : Check the value for a variable definition - need a special function for checking all inputs really
 		}
 		
-		vec_network.addMeshCustomConnection(_node_ids[node], connection_parameters, &_mesh_transition_matrics[_node_algorithm_mapping[node]][efficacy], _external_node_ids.size());
+		vec_network.addMeshCustomConnection(_node_ids[node], connection_parameters, &_mesh_transition_matrics[_node_algorithm_mapping[node]][efficacy], _external_node_count);
 	}
 
 	bool addGridAlgorithmGroupNode(pugi::xml_document& doc, std::string alg_name) {
@@ -218,7 +218,7 @@ public:
 		// In the Cuda version, we just deal with "Group" algorithms and RateFunctor
 
 		_node_ids = map<std::string, MPILib::NodeId>();
-		_external_node_ids = map<std::string, MPILib::NodeId>();
+		_external_node_count = 0;
 		//Nodes
 		for (pugi::xml_node node = doc.child("Simulation").child("Nodes").child("Node"); node; node = node.next_sibling("Node")) {
 			std::string node_name = std::string(node.attribute("name").value());
@@ -281,6 +281,8 @@ public:
 					addIncomingGridConnectionCCP(conn);
 				if (_node_algorithm_types[conn_node] == std::string("mesh"))
 					addIncomingMeshConnectionCCP(conn);
+
+				_external_node_count++;
 			}
 			// todo : Deal with other connection types - DelayedConnection, double
 		}
@@ -325,6 +327,7 @@ public:
 		double simulation_length = std::stod(std::string(doc.child("Simulation").child("SimulationRunParameter").child_value("t_end")));
 		double time_step = std::stod(std::string(doc.child("Simulation").child("SimulationRunParameter").child_value("t_step")));
 		std::string log_filename = std::string(doc.child("Simulation").child("SimulationRunParameter").child_value("name_log"));
+		unsigned int master_steps = std::stoi(std::string(doc.child("Simulation").child("SimulationRunParameter").child_value("master_steps")));
 
 		MiindTvbModelAbstract<WeightType, MPILib::utilities::CircularDistribution>::_simulation_length = simulation_length;
 		MiindTvbModelAbstract<WeightType, MPILib::utilities::CircularDistribution>::_time_step = time_step;
@@ -334,7 +337,7 @@ public:
 		vec_network.setRateNodes(_rate_nodes, _rate_node_intervals);
 		vec_network.setDensityNodes(_density_nodes, _density_node_start_times, _density_node_end_times, _density_node_intervals);
 
-		vec_network.initOde2DSystem();
+		vec_network.initOde2DSystem(master_steps);
 
 	}
 
@@ -380,7 +383,7 @@ private:
 
 	std::map<std::string, MPILib::NodeId> _node_ids;
 	std::map<std::string, std::string> _node_algorithm_types;
-	std::map<std::string, MPILib::NodeId> _external_node_ids;
+	unsigned int _external_node_count;
 
 	unsigned long _count;
 	std::vector<MPILib::NodeId> _display_nodes;

@@ -172,7 +172,6 @@
     <ClInclude Include="..\Fid.hpp" />
     <ClInclude Include="..\FiducialElement.hpp" />
     <ClInclude Include="..\GridAlgorithm.hpp" />
-    <ClInclude Include="..\GridAlgorithmCode.hpp" />
     <ClInclude Include="..\GridJumpAlgorithm.hpp" />
     <ClInclude Include="..\GridJumpAlgorithmCode.hpp" />
     <ClInclude Include="..\GridReport.hpp" />
@@ -192,7 +191,6 @@
     <ClInclude Include="..\MeshAlgorithm.hpp" />
     <ClInclude Include="..\MeshAlgorithmCode.hpp" />
     <ClInclude Include="..\MeshAlgorithmCustom.hpp" />
-    <ClInclude Include="..\MeshAlgorithmCustomCode.hpp" />
     <ClInclude Include="..\MeshTree.hpp" />
     <ClInclude Include="..\modulo.hpp" />
     <ClInclude Include="..\Ode2DSystem.hpp" />
@@ -224,6 +222,7 @@
     <ClCompile Include="..\display.cpp" />
     <ClCompile Include="..\Euler.cpp" />
     <ClCompile Include="..\Fid.cpp" />
+    <ClCompile Include="..\GridAlgorithmCode.cpp" />
     <ClCompile Include="..\kd.cpp" />
     <ClCompile Include="..\LineSegment.cpp" />
     <ClCompile Include="..\Master.cpp" />
@@ -233,6 +232,7 @@
     <ClCompile Include="..\MasterOdeint.cpp" />
     <ClCompile Include="..\MasterOMP.cpp" />
     <ClCompile Include="..\Mesh.cpp" />
+    <ClCompile Include="..\MeshAlgorithmCustomCode.cpp" />
     <ClCompile Include="..\MeshTree.cpp" />
     <ClCompile Include="..\Ode2DSystem.cpp" />
     <ClCompile Include="..\Ode2DSystemGroup.cpp" />

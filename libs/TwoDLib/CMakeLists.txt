@@ -44,6 +44,8 @@ MasterGridSomaDendrite.cpp
 Uniform.cpp
 MasterOdeint.cpp
 MasterOMP.cpp
+MeshAlgorithmCustomCode.cpp
+GridAlgorithmCode.cpp
 )
 
 set( TWOD_HEADERS
@@ -52,7 +54,6 @@ MasterOMP.hpp
 MasterParameter.hpp
 Cell.hpp
 MeshAlgorithmCode.hpp
-MeshAlgorithmCustomCode.hpp
 CheckSystem.hpp
 MeshAlgorithmCustom.hpp
 MeshAlgorithm.hpp
@@ -72,7 +73,6 @@ Fid.hpp
 PolyGenerator.hpp
 FiducialElement.hpp
 pugiconfig.hpp
-GridAlgorithmCode.hpp
 pugixml.hpp
 GridAlgorithm.hpp
 GridJumpAlgorithmCode.hpp

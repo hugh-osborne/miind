@@ -54,9 +54,6 @@
     <ClInclude Include="..\GridAlgorithm.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\GridAlgorithmCode.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\GridJumpAlgorithm.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -109,12 +106,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\MeshAlgorithmCode.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\MeshAlgorithmCustom.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\MeshAlgorithmCustomCode.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\MeshTree.hpp">
@@ -178,6 +169,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\XML.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\MeshAlgorithmCustom.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -273,6 +267,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\Uniform.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\GridAlgorithmCode.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\MeshAlgorithmCustomCode.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
